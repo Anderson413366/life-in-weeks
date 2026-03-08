@@ -40,10 +40,26 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   const hudTimerRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Compute initial offset to center the grid in the viewport
+  const initialZoom = 0.85;
+  const gridTotalW = 30 * initialZoom + 52 * (12 + 4) * initialZoom;
+  const currentRow = Math.floor(lifeStats.weeksPassed / 52);
+  const gridRowY = 18 * initialZoom + currentRow * (12 + 4) * initialZoom;
+
   const [{ zoom, x, y }, api] = useSpring(() => ({
-    zoom: 0.85, x: 0, y: 0,
+    zoom: initialZoom,
+    x: 0, // will be set on mount
+    y: -gridRowY + 200, // center current row near top third
     config: { mass: 0.8, tension: 200, friction: 28 },
   }));
+
+  // Center horizontally on mount
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const containerW = containerRef.current.clientWidth;
+    const centerX = (containerW - gridTotalW) / 2;
+    api.start({ x: Math.max(0, centerX), immediate: true });
+  }, []);
 
   const flashHud = useCallback(() => {
     setHudVisible(true);
