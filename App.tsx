@@ -15,6 +15,8 @@ import DashboardPage from "./components/DashboardPage";
 import ResonanceGrid from "./components/ResonanceGrid";
 import DiaryPage from "./components/DiaryPage";
 import SettingsPage from "./components/SettingsPage";
+import TimeMirrorPage from "./components/TimeMirrorPage";
+import { getApiKey } from "./lib/ai";
 import VoiceJournalButton from "./components/VoiceJournalButton";
 import FluidBackground from "./components/FluidBackground";
 
@@ -78,6 +80,15 @@ const App: React.FC = () => {
               onApiKeyChange={profile.updateApiKey}
               onAveragesChange={profile.updateAverages}
               onSignOut={signOut}
+            />
+          ) : page === "timemirror" ? (
+            <TimeMirrorPage
+              key="timemirror"
+              birthYear={profile.birthdate ? parseInt(profile.birthdate.split("-")[0], 10) : 1984}
+              currentAge={lifeStats ? Math.floor(lifeStats.daysPassed / 365.25) : 30}
+              lifeExpectancy={profile.lifeExpectancy}
+              displayName={profile.greeting || profile.displayName}
+              geminiApiKey={getApiKey()}
             />
           ) : page === "diary" ? (
             <DiaryPage

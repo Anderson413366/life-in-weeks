@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-export type Page = "dashboard" | "grid" | "diary" | "settings";
+export type Page = "dashboard" | "grid" | "diary" | "timemirror" | "settings";
 
 interface NavigationProps {
   currentPage: Page;
@@ -11,10 +11,11 @@ interface NavigationProps {
 }
 
 const tabs: { id: Page; label: string; icon: string }[] = [
-  { id: "dashboard", label: "Dashboard", icon: "◉" },
-  { id: "grid",      label: "Life Grid", icon: "▦" },
-  { id: "diary",     label: "Diary",     icon: "📖" },
-  { id: "settings",  label: "Settings",  icon: "⚙" },
+  { id: "dashboard",  label: "Dashboard",   icon: "◉" },
+  { id: "grid",       label: "Life Grid",   icon: "▦" },
+  { id: "diary",      label: "Diary",       icon: "📖" },
+  { id: "timemirror", label: "Time Mirror", icon: "🪞" },
+  { id: "settings",   label: "Settings",    icon: "⚙" },
 ];
 
 const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate, greeting, avatarUrl }) => (

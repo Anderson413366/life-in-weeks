@@ -12,6 +12,7 @@ const ITEMS = [
   { emoji: "📖", label: "Diary", desc: "Tap the mic button to voice-journal. Each entry lights up your grid." },
   { emoji: "⚙️", label: "Settings", desc: "Set your birthdate, life expectancy, and AI key for horoscope + insights." },
   { emoji: "🎙️", label: "Voice Journal", desc: "Hold the mic on any screen to capture a moment in under 10 seconds." },
+  { emoji: "🪞", label: "Time Mirror", desc: "Upload your photo and AI generates your portrait at every decade of your life." },
   { emoji: "✨", label: "Horoscope", desc: "Requires a Gemini API key (free at aistudio.google.com) added in Settings." },
 ];
 
