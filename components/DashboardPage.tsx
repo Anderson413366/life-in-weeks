@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { LifeStats, DynamicStats } from "../types";
+import {
+  getBiologyStats, getCosmicStats, getLifeInNumbers,
+  getTimeSpent, getBirthdayCountdown, getAlternativeAges,
+} from "../lib/lifeData";
 
 import HeroRing from "./HeroRing";
+import ExactAgeTicker from "./ExactAgeTicker";
 import StatCard from "./StatCard";
+import DataCard from "./DataCard";
 import SectionHeading from "./SectionHeading";
 import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
@@ -20,14 +26,22 @@ interface DashboardPageProps {
 const section = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" },
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.06, duration: 0.5, ease: "easeOut" },
   }),
 };
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay }) => {
   const pct = parseFloat(lifeStats.percentageLived);
+  const birthDate = useMemo(() => new Date(birthYear, birthMonth - 1, birthDay), [birthYear, birthMonth, birthDay]);
+  const now = useMemo(() => new Date(), []);
+
+  const biology = useMemo(() => getBiologyStats(birthDate, now), [birthDate, now]);
+  const cosmic = useMemo(() => getCosmicStats(birthDate, now), [birthDate, now]);
+  const numbers = useMemo(() => getLifeInNumbers(birthDate, now), [birthDate, now]);
+  const timeSpent = useMemo(() => getTimeSpent(birthDate, now), [birthDate, now]);
+  const birthday = useMemo(() => getBirthdayCountdown(birthDate, now), [birthDate, now]);
+  const altAges = useMemo(() => getAlternativeAges(birthDate, now), [birthDate, now]);
 
   return (
     <motion.div
@@ -54,8 +68,24 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
         />
       </motion.section>
 
-      {/* ── Life at a glance ─────────────────────────────────── */}
+      {/* ── Your Exact Age ───────────────────────────────────── */}
       <motion.section custom={1} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Your Exact Age" />
+        <ExactAgeTicker birthDate={birthDate} birthYear={birthYear} />
+      </motion.section>
+
+      {/* ── Next Birthday ────────────────────────────────────── */}
+      <motion.section custom={2} initial="hidden" animate="visible" variants={section}>
+        <div className="glass rounded-xl p-5 sm:p-6 max-w-md mx-auto text-center">
+          <div className="text-3xl mb-2">🎂</div>
+          <div className="text-4xl sm:text-5xl font-bold text-white glow-gold counter-digits">{birthday.daysUntil}</div>
+          <div className="text-xs text-text-muted uppercase tracking-wider mt-1">days until you turn {birthday.turningAge}</div>
+          <div className="text-xs text-text-muted/60 mt-1">{birthday.nextBirthdayDate}</div>
+        </div>
+      </motion.section>
+
+      {/* ── Life at a Glance ─────────────────────────────────── */}
+      <motion.section custom={3} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Life at a Glance" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard value={lifeStats.daysPassed}    label="Days Lived"      variant="daysLived"      index={0} />
@@ -65,21 +95,87 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
         </div>
       </motion.section>
 
-      {/* ── Live counters ────────────────────────────────────── */}
-      <motion.section custom={2} initial="hidden" animate="visible" variants={section}>
+      {/* ── Live Chronometer ─────────────────────────────────── */}
+      <motion.section custom={4} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Live Chronometer" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-          <StatCard value={dynamicStats.hoursLived}      label="Hours Lived"   variant="mini" index={0} live />
-          <StatCard value={dynamicStats.minutesLived}    label="Minutes Lived" variant="mini" index={1} live />
-          <StatCard value={dynamicStats.secondsLived}    label="Seconds Lived" variant="mini" index={2} live />
-          <StatCard value={dynamicStats.hoursRemaining}  label="Hours Rem."    variant="mini" index={3} live />
-          <StatCard value={dynamicStats.minutesRemaining} label="Minutes Rem." variant="mini" index={4} live />
-          <StatCard value={dynamicStats.secondsRemaining} label="Seconds Rem." variant="mini" index={5} live />
+          <StatCard value={dynamicStats.hoursLived}       label="Hours Lived"   variant="mini" index={0} live />
+          <StatCard value={dynamicStats.minutesLived}     label="Minutes Lived" variant="mini" index={1} live />
+          <StatCard value={dynamicStats.secondsLived}     label="Seconds Lived" variant="mini" index={2} live />
+          <StatCard value={dynamicStats.hoursRemaining}   label="Hours Rem."    variant="mini" index={3} live />
+          <StatCard value={dynamicStats.minutesRemaining} label="Minutes Rem."  variant="mini" index={4} live />
+          <StatCard value={dynamicStats.secondsRemaining} label="Seconds Rem."  variant="mini" index={5} live />
         </div>
       </motion.section>
 
-      {/* ── Waking life ──────────────────────────────────────── */}
-      <motion.section custom={3} initial="hidden" animate="visible" variants={section}>
+      {/* ── Body & Biology ───────────────────────────────────── */}
+      <motion.section custom={5} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Body & Biology" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <DataCard icon="💓" value={biology.heartbeats}  label="Heartbeats"      sublabel="~72 bpm average"   color="#ff6b6b" index={0} />
+          <DataCard icon="🌬️" value={biology.breaths}    label="Breaths Taken"   sublabel="~15 per minute"    color="#00d4ff" index={1} />
+          <DataCard icon="👁️" value={biology.blinks}     label="Blinks"          sublabel="~17 per minute awake" color="#8e44ad" index={2} />
+          <DataCard icon="😴" value={`${biology.yearsSlept} yrs`} label="Time Spent Sleeping" sublabel={`${biology.hoursSlept.toLocaleString()} hours total`} color="#2196F3" index={3} />
+          <DataCard icon="🍽️" value={numbers.mealsEaten} label="Meals Eaten"     sublabel="~3 per day"        color="#ff9f43" index={4} />
+          <DataCard icon="😄" value={numbers.laughs}     label="Times Laughed"   sublabel="~15 per day"       color="#ffd700" index={5} />
+        </div>
+      </motion.section>
+
+      {/* ── Cosmic Perspective ───────────────────────────────── */}
+      <motion.section custom={6} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Cosmic Perspective" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <DataCard icon="🌍" value={cosmic.orbitsAroundSun}  label="Orbits Around the Sun"  color="#4caf50" index={0} />
+          <DataCard icon="🚀" value={`${(cosmic.distanceThroughSpaceMiles / 1_000_000_000).toFixed(1)}B mi`} label="Distance Through Space" sublabel={`${(cosmic.distanceThroughSpaceKm / 1_000_000_000).toFixed(1)}B km at 67,000 mph`} color="#00d4ff" index={1} />
+          <DataCard icon="🌕" value={cosmic.fullMoons}        label="Full Moons Witnessed"   sublabel="~1 every 29.5 days" color="#ffd700" index={2} />
+          <DataCard icon="🌅" value={cosmic.sunrises}         label="Sunrises"               sublabel="one for each day" color="#ff9f43" index={3} />
+          <DataCard icon="🍂" value={cosmic.seasonsExperienced} label="Seasons Experienced"  sublabel="spring, summer, fall, winter" color="#4caf50" index={4} />
+          <DataCard icon="🚶" value={numbers.stepsTaken}      label="Steps Taken"            sublabel="~7,500 per day" color="#8e44ad" index={5} />
+        </div>
+      </motion.section>
+
+      {/* ── Life in Numbers ──────────────────────────────────── */}
+      <motion.section custom={7} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Life in Numbers" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <DataCard icon="💬" value={numbers.wordsSpoken} label="Words Spoken"     sublabel="~16,000 per day" color="#00d4ff" index={0} />
+          <DataCard icon="💭" value={numbers.dreamsHad}   label="Dreams Had"       sublabel="~4 per night"    color="#8e44ad" index={1} />
+          <DataCard icon="📱" value={`${timeSpent.screenTimeYears} yrs`} label="Screen Time"  sublabel="~7 hrs/day average" color="#ff6b6b" index={2} />
+          <DataCard icon="🍳" value={`${timeSpent.eatingMonths} mo`}     label="Time Eating"  sublabel="~1.2 hrs/day"       color="#ff9f43" index={3} />
+          <DataCard icon="😴" value={`${timeSpent.sleepingYears} yrs`}   label="Time Sleeping" sublabel="~8 hrs/day"        color="#2196F3" index={4} />
+          <DataCard icon="🌟" value={`${lifeStats.weeksPassed} / ${lifeStats.totalLifeWeeks}`} label="Weeks Used" sublabel={`${(100 - pct).toFixed(1)}% still ahead`} color="#4caf50" index={5} />
+        </div>
+      </motion.section>
+
+      {/* ── Your Age on Other Planets ────────────────────────── */}
+      <motion.section custom={8} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Your Age on Other Planets" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+          {[
+            { icon: "☿", name: "Mercury", value: altAges.mercuryYears, color: "#b4b4c7" },
+            { icon: "♀", name: "Venus",   value: altAges.venusYears,   color: "#ff9f43" },
+            { icon: "♂", name: "Mars",    value: altAges.marsYears,    color: "#ff6b6b" },
+            { icon: "♃", name: "Jupiter", value: altAges.jupiterYears, color: "#ff9f43" },
+            { icon: "🐕", name: "Dog Yrs", value: altAges.dogYears,    color: "#8e44ad" },
+            { icon: "🐈", name: "Cat Yrs", value: altAges.catYears,    color: "#00d4ff" },
+          ].map((p, i) => (
+            <motion.div
+              key={p.name}
+              className="glass rounded-xl p-3 sm:p-4 text-center"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05, duration: 0.3 }}
+            >
+              <div className="text-xl mb-1">{p.icon}</div>
+              <div className="text-lg sm:text-xl font-bold text-white counter-digits">{p.value}</div>
+              <div className="text-[0.5rem] sm:text-[0.55rem] text-text-muted uppercase tracking-wider mt-0.5">{p.name}</div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ── Waking Life ──────────────────────────────────────── */}
+      <motion.section custom={9} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Waking Life" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
           <StatCard value={dynamicStats.wakingHoursLived}     label="Waking Hours Lived" variant="waking" index={0} sublabel="~16 hrs/day awake" live />
@@ -87,8 +183,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
         </div>
       </motion.section>
 
-      {/* ── Current rhythms ──────────────────────────────────── */}
-      <motion.section custom={4} initial="hidden" animate="visible" variants={section}>
+      {/* ── Current Rhythms ──────────────────────────────────── */}
+      <motion.section custom={10} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Current Rhythms" />
         <div className="flex flex-col gap-3 max-w-2xl mx-auto">
           <ProgressBar label="Today"      value={dynamicStats.percentDayPassed}   color="bg-primary"   index={0} />
@@ -98,7 +194,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
       </motion.section>
 
       {/* ── Milestones ───────────────────────────────────────── */}
-      <motion.section custom={5} initial="hidden" animate="visible" variants={section}>
+      <motion.section custom={11} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Life Milestones" />
         <MilestoneTimeline
           milestones={[
