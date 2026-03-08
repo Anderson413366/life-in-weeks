@@ -4,6 +4,7 @@ import { addWeeks, differenceInWeeks, format } from "date-fns";
 import type { DiaryMap, SelectedWeek } from "../types";
 import type { FullDiaryEntry } from "../hooks/useDiary";
 import DiaryModal from "./DiaryModal";
+import QuoteBlock from "./QuoteBlock";
 
 interface DiaryPageProps {
   fullEntries: FullDiaryEntry[];
@@ -250,6 +251,8 @@ const DiaryPage: React.FC<DiaryPageProps> = ({ fullEntries, diaryEntries, birthd
           )}
         </>
       )}
+
+      <div className="pt-4 pb-6"><QuoteBlock /></div>
 
       <DiaryModal isOpen={isModalOpen} onClose={closeModal} selectedWeek={selectedWeek}
         initialEntryText={currentEntry} userId={userId} onSave={onSave} />

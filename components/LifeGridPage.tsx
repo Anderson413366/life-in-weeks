@@ -9,6 +9,7 @@ import LifeBattery from "./LifeBattery";
 import WeekModal from "./WeekModal";
 import LegacySnapshot from "./LegacySnapshot";
 import HelpModal from "./HelpModal";
+import QuoteBlock from "./QuoteBlock";
 
 type GridMode = "weeks" | "months" | "years";
 
@@ -267,9 +268,13 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
       </div>
 
       {/* Bottom hint */}
-      <p className="text-center text-[#334466] text-xs pb-4 select-none">
+      <p className="text-center text-[#334466] text-xs pb-2 select-none">
         Each cell = one {gridMode === "weeks" ? "week" : gridMode === "months" ? "month" : "year"} of your life · Click any past cell to journal
       </p>
+
+      <div className="px-4 pb-6">
+        <QuoteBlock />
+      </div>
 
       <WeekModal isOpen={isModalOpen} onClose={closeDiary} week={selectedWeek}
         initialEntry={currentEntry} initialPhotos={currentPhotos}

@@ -13,8 +13,8 @@ import ExactAgeTicker from "./ExactAgeTicker";
 import AccordionSection from "./AccordionSection";
 import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
-import AIInsightBanner from "./AIInsightBanner";
 import LegacySnapshot from "./LegacySnapshot";
+import QuoteBlock from "./QuoteBlock";
 import { useHoroscope } from "../hooks/useHoroscope";
 import { useFamousBirthdays } from "../hooks/useFamousBirthdays";
 import type { MoodEntry } from "../hooks/useMood";
@@ -116,7 +116,7 @@ function DataRow({ icon, value, label, sub }: { icon: string; value: string | nu
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
   lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay,
-  averages, todayMood, recentMoods, mode, displayName, onSaveMood,
+  averages, todayMood, recentMoods, mode: _mode, displayName, onSaveMood,
 }) => {
   const [showSnapshot, setShowSnapshot] = useState(false);
   const pct = parseFloat(lifeStats.percentageLived);
@@ -151,10 +151,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     >
       {/* ══ HERO ══════════════════════════════════════════════ */}
       <motion.section className="flex flex-col items-center pt-4" {...fade(0)}>
-        <p className="text-sm italic font-light max-w-md text-center leading-relaxed mb-8" style={{ color: "rgba(180, 210, 255, 0.85)" }}>
-          "{quote}"
-        </p>
-
         <motion.div
           className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center"
           animate={{ scale: [1, 1.02, 1] }}
@@ -210,6 +206,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             className="px-4 py-1.5 rounded-full text-xs bg-[#0d1b2e] border border-[#1e3a5f] text-white/90 hover:text-white hover:border-[#00d4ff]/60 transition-all">
             📸 Share Snapshot
           </button>
+          <QuoteBlock quote={quote} />
         </div>
       </motion.section>
 
@@ -275,10 +272,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </motion.section>
 
-      {/* ══ AI INSIGHT ════════════════════════════════════════ */}
-      <motion.section {...fade(2)}>
-        <AIInsightBanner mode={mode} lifeStats={lifeStats} todayMood={todayMood} />
-      </motion.section>
 
       {/* ══ ACCORDIONS (gap-2 compact list) ═══════════════════ */}
       <div className="flex flex-col gap-2">

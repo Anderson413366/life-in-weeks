@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GoogleGenAI } from "@google/genai";
 import { generateDecadeImage, type DecadeInfo } from "../hooks/useTimeMirror";
+import QuoteBlock from "./QuoteBlock";
 
 interface TimeMirrorPageProps {
   birthYear: number;
@@ -129,6 +130,7 @@ const TimeMirrorPage: React.FC<TimeMirrorPageProps> = ({ birthYear, currentAge, 
               <p className="text-white/25 text-xs">Best: clear face · front-facing · good lighting</p>
               {!geminiApiKey && <p className="text-amber-400/70 text-xs">⚠️ Gemini API key required — add it in Settings</p>}
             </div>
+            <QuoteBlock />
           </motion.div>
         )}
 
