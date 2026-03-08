@@ -12,7 +12,7 @@ import { useAppMode } from "./hooks/useAppMode";
 import AuthGate from "./components/AuthGate";
 import Navigation, { type Page } from "./components/Navigation";
 import DashboardPage from "./components/DashboardPage";
-import ResonanceGrid from "./components/ResonanceGrid";
+import LifeGridPage from "./components/LifeGridPage";
 import DiaryPage from "./components/DiaryPage";
 import SettingsPage from "./components/SettingsPage";
 import TimeMirrorPage from "./components/TimeMirrorPage";
@@ -100,7 +100,7 @@ const App: React.FC = () => {
               onSave={saveEntry}
             />
           ) : page === "grid" && hasBirthdate ? (
-            <ResonanceGrid
+            <LifeGridPage
               key="grid"
               lifeStats={lifeStats!}
               birthdate={profile.birthdate}
