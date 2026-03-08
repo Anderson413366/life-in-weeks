@@ -1,14 +1,16 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useGesture } from "@use-gesture/react";
 import { useSpring } from "@react-spring/web";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { addWeeks, format } from "date-fns";
 import type { LifeStats, DiaryMap, SelectedWeek, HoverInfo } from "../types";
 import type { AppMode } from "../lib/theme";
 import type { FullDiaryEntry } from "../hooks/useDiary";
+import type { MoodEntry } from "../hooks/useMood";
 import ResonanceCanvas from "./ResonanceCanvas";
 import LifeBattery from "./LifeBattery";
 import DiaryModal from "./DiaryModal";
+import LegacySnapshot from "./LegacySnapshot";
 import Tooltip from "./Tooltip";
 
 interface ResonanceGridProps {
@@ -19,39 +21,62 @@ interface ResonanceGridProps {
   fullEntries: FullDiaryEntry[];
   userId?: string;
   mode: AppMode;
+  todayMood: MoodEntry | null;
+  displayName: string;
   onSaveDiary: (weekIndex: number, content: string, photos?: string[]) => Promise<void>;
 }
 
 const ResonanceGrid: React.FC<ResonanceGridProps> = ({
-  lifeStats, birthdate, lifeExpectancy, diaryEntries, fullEntries, userId, mode, onSaveDiary,
+  lifeStats, birthdate, lifeExpectancy, diaryEntries, fullEntries, userId, mode, todayMood, displayName, onSaveDiary,
 }) => {
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSnapshot, setShowSnapshot] = useState(false);
+  const [hudVisible, setHudVisible] = useState(true);
   const [hoverInfo] = useState<HoverInfo | null>(null);
+  const hudTimerRef = useRef<number>(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Spring-animated zoom + pan
-  const [{ zoom, x, y }, api] = useSpring(() => ({ zoom: 1, x: 0, y: 0, config: { tension: 200, friction: 30 } }));
+  // Start at cosmic overview (zoom 0.85), spring physics for natural momentum
+  const [{ zoom, x, y }, api] = useSpring(() => ({
+    zoom: 0.85,
+    x: 0,
+    y: 0,
+    config: { mass: 0.8, tension: 200, friction: 28 },
+  }));
+
+  // Show HUD briefly on any interaction, then fade
+  const flashHud = useCallback(() => {
+    setHudVisible(true);
+    clearTimeout(hudTimerRef.current);
+    hudTimerRef.current = window.setTimeout(() => setHudVisible(false), 2500);
+  }, []);
+
+  // Flash HUD on mount
+  useEffect(() => { flashHud(); }, [flashHud]);
 
   const bind = useGesture(
     {
       onPinch: ({ offset: [d] }) => {
-        api.start({ zoom: Math.max(0.4, Math.min(6, 1 + (d - 1) * 0.5)) });
+        api.start({ zoom: Math.max(0.3, Math.min(8, 1 + (d - 1) * 0.5)) });
+        flashHud();
       },
       onDrag: ({ offset: [dx, dy], pinching }) => {
         if (pinching) return;
         api.start({ x: dx, y: dy });
+        flashHud();
       },
       onWheel: ({ delta: [, dy], event }) => {
         event.preventDefault();
-        const newZoom = Math.max(0.4, Math.min(6, zoom.get() - dy * 0.002));
-        api.start({ zoom: newZoom });
+        const curr = zoom.get();
+        api.start({ zoom: Math.max(0.3, Math.min(8, curr - dy * 0.003)) });
+        flashHud();
       },
     },
     {
       drag: { from: () => [x.get(), y.get()] },
-      pinch: { scaleBounds: { min: 0.4, max: 6 }, from: () => [zoom.get(), 0] },
+      pinch: { scaleBounds: { min: 0.3, max: 8 }, from: () => [zoom.get(), 0] },
       wheel: { eventOptions: { passive: false } },
     },
   );
@@ -68,42 +93,19 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   const pct = parseFloat(lifeStats.percentageLived);
   const currentEntry = selectedWeek ? diaryEntries[selectedWeek.index.toString()] ?? "" : "";
   const currentPhotos = selectedWeek ? fullEntries.find((e) => e.week_index === selectedWeek.index)?.photos ?? [] : [];
+  const isFocus = mode === "focus";
   const entryCount = Object.keys(diaryEntries).length;
 
-  const focusStyle = mode === "focus";
+  const [birthYear, birthMonth, birthDay] = birthdate.split("-").map(Number);
 
   return (
-    <motion.div
-      className="flex flex-col gap-4 w-full"
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Info bar */}
-      <div className={`${focusStyle ? "bg-[#111] border border-[#333]" : "glass"} rounded-xl p-3 sm:p-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6`}>
-        <div className="flex items-center gap-2">
-          <span className={`text-xs ${focusStyle ? "text-[#888]" : "text-text-muted"}`}>Life Remaining</span>
-          <LifeBattery percentUsed={pct} size="sm" />
-        </div>
-        <div className={`h-4 w-px ${focusStyle ? "bg-[#333]" : "bg-box-border"} hidden sm:block`} />
-        <span className={`text-xs ${focusStyle ? "text-[#888]" : "text-text-muted"}`}>
-          Week <strong className="text-white">{lifeStats.currentWeekInYear}</strong> · Year <strong className="text-white">{lifeStats.currentYearOfLife}</strong>
-        </span>
-        {entryCount > 0 && (
-          <>
-            <div className={`h-4 w-px ${focusStyle ? "bg-[#333]" : "bg-box-border"} hidden sm:block`} />
-            <span className={`text-xs ${focusStyle ? "text-[#888]" : "text-text-muted"}`}>📝 {entryCount} entries</span>
-          </>
-        )}
-        <div className={`h-4 w-px ${focusStyle ? "bg-[#333]" : "bg-box-border"} hidden sm:block`} />
-        <span className={`text-[0.6rem] ${focusStyle ? "text-[#555]" : "text-text-muted/40"}`}>Pinch/scroll to zoom · Drag to pan · Click a week</span>
-      </div>
-
-      {/* Canvas container */}
+    <div className="relative w-full" style={{ height: "calc(100vh - 120px)", minHeight: 400 }}>
+      {/* Full-screen canvas */}
       <div
         ref={containerRef}
         {...bind()}
-        className={`relative w-full rounded-xl overflow-hidden border ${focusStyle ? "border-[#333] bg-black" : "border-box-border bg-[#0a0a1a]"}`}
-        style={{ height: "min(70vh, 600px)", touchAction: "none" }}
+        className={`absolute inset-0 rounded-2xl overflow-hidden border ${isFocus ? "border-[#222] bg-black" : "border-box-border/30"}`}
+        style={{ touchAction: "none" }}
       >
         <ResonanceCanvas
           weeksPassed={lifeStats.weeksPassed}
@@ -113,42 +115,77 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
           offsetX={x.get()}
           offsetY={y.get()}
           mode={mode}
+          hudVisible={hudVisible}
           onWeekSelect={openDiary}
         />
 
-        {/* Zoom indicator */}
-        <div className={`absolute bottom-3 right-3 px-2 py-1 rounded-md text-[0.6rem] font-mono ${focusStyle ? "bg-[#222] text-[#888]" : "glass text-text-muted/60"}`}>
+        {/* Top HUD — fades in/out */}
+        <AnimatePresence>
+          {hudVisible && (
+            <motion.div
+              className={`absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className={`flex items-center gap-3 ${isFocus ? "bg-black/80" : "bg-[rgba(10,10,30,0.7)] backdrop-blur-md"} rounded-xl px-3 py-2 pointer-events-auto`}>
+                <LifeBattery percentUsed={pct} size="sm" />
+              </div>
+              <div className={`flex items-center gap-3 ${isFocus ? "bg-black/80 text-[#888]" : "bg-[rgba(10,10,30,0.7)] backdrop-blur-md text-text-muted/70"} rounded-xl px-3 py-2 text-xs`}>
+                <span>Wk <strong className="text-white">{lifeStats.currentWeekInYear}</strong></span>
+                <span>Yr <strong className="text-white">{lifeStats.currentYearOfLife}</strong></span>
+                {entryCount > 0 && <span>📝 {entryCount}</span>}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bottom controls */}
+        <div className="absolute bottom-3 left-3 flex flex-col gap-1">
+          <button onClick={() => { api.start({ zoom: Math.min(8, zoom.get() + 0.5) }); flashHud(); }}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium ${isFocus ? "bg-[#222] text-white" : "bg-[rgba(10,10,30,0.7)] backdrop-blur-md text-white/80"}`}>+</button>
+          <button onClick={() => { api.start({ zoom: Math.max(0.3, zoom.get() - 0.5) }); flashHud(); }}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium ${isFocus ? "bg-[#222] text-white" : "bg-[rgba(10,10,30,0.7)] backdrop-blur-md text-white/80"}`}>−</button>
+          <button onClick={() => { api.start({ zoom: 0.85, x: 0, y: 0 }); flashHud(); }}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center text-[0.6rem] ${isFocus ? "bg-[#222] text-[#888]" : "bg-[rgba(10,10,30,0.7)] backdrop-blur-md text-white/50"}`}>⟳</button>
+        </div>
+
+        {/* Zoom level */}
+        <div className={`absolute bottom-3 right-3 px-2 py-1 rounded-md text-[0.55rem] font-mono ${isFocus ? "bg-[#222] text-[#666]" : "bg-[rgba(10,10,30,0.5)] text-white/30"}`}>
           {zoom.get().toFixed(1)}×
         </div>
 
-        {/* Zoom controls */}
-        <div className={`absolute bottom-3 left-3 flex flex-col gap-1`}>
-          <button onClick={() => api.start({ zoom: Math.min(6, zoom.get() + 0.5) })}
-            className={`w-8 h-8 rounded-md flex items-center justify-center text-sm ${focusStyle ? "bg-[#222] text-white" : "glass text-white"}`}>+</button>
-          <button onClick={() => api.start({ zoom: Math.max(0.4, zoom.get() - 0.5) })}
-            className={`w-8 h-8 rounded-md flex items-center justify-center text-sm ${focusStyle ? "bg-[#222] text-white" : "glass text-white"}`}>−</button>
-          <button onClick={() => api.start({ zoom: 1, x: 0, y: 0 })}
-            className={`w-8 h-8 rounded-md flex items-center justify-center text-[0.6rem] ${focusStyle ? "bg-[#222] text-[#888]" : "glass text-text-muted/60"}`}>⟳</button>
-        </div>
+        {/* Floating Legacy Snapshot orb */}
+        <motion.button
+          onClick={() => setShowSnapshot(true)}
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl"
+          style={{
+            background: isFocus ? "#333" : "linear-gradient(135deg, #00d4ff, #8e44ad, #ff6b6b)",
+            boxShadow: isFocus ? "none" : "0 0 20px rgba(0,212,255,0.3), 0 0 40px rgba(142,68,173,0.15)",
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          title="Share Snapshot"
+        >
+          <span className="text-lg">{isFocus ? "📸" : "✨"}</span>
+        </motion.button>
       </div>
 
-      {/* Legend */}
-      <div className={`flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs ${focusStyle ? "text-[#888]" : "text-text-muted"}`}>
+      {/* Legend — below canvas */}
+      <div className={`absolute -bottom-8 left-0 right-0 flex flex-wrap justify-center items-center gap-x-5 gap-y-1 text-[0.6rem] ${isFocus ? "text-[#666]" : "text-text-muted/40"}`}>
         {[
-          { label: "Past", cls: focusStyle ? "bg-white" : "bg-primary" },
-          { label: "Current", cls: focusStyle ? "bg-white animate-pulse" : "bg-accent animate-pulse" },
-          { label: "Future", cls: focusStyle ? "bg-[#1a1a1a] border-[#333]" : "bg-bg-light" },
-          { label: "Diary", extra: "●", color: focusStyle ? "#fff" : "#ffd700" },
+          { label: "Lived", color: isFocus ? "#fff" : "#00d4ff" },
+          { label: "Now", color: isFocus ? "#fff" : "#ff6b6b" },
+          { label: "Future", color: isFocus ? "#333" : "#1a1a3a" },
+          { label: "Diary", color: isFocus ? "#fff" : "#ffd700" },
         ].map((item) => (
-          <div key={item.label} className="flex items-center gap-1.5">
-            {item.extra ? (
-              <span className="text-[0.6rem]" style={{ color: item.color }}>{item.extra}</span>
-            ) : (
-              <span className={`inline-block w-3 h-3 border border-box-border rounded-sm ${item.cls}`} />
-            )}
+          <div key={item.label} className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: item.color }} />
             {item.label}
           </div>
         ))}
+        <span className="opacity-50">Scroll/pinch to zoom · Drag to pan · Click a week</span>
       </div>
 
       <Tooltip hoverInfo={hoverInfo} />
@@ -157,7 +194,12 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
         initialEntryText={currentEntry} initialPhotos={currentPhotos}
         userId={userId} onSave={onSaveDiary}
       />
-    </motion.div>
+      <LegacySnapshot
+        isOpen={showSnapshot} onClose={() => setShowSnapshot(false)}
+        lifeStats={lifeStats} birthYear={birthYear} birthMonth={birthMonth} birthDay={birthDay}
+        displayName={displayName} todayMood={todayMood}
+      />
+    </div>
   );
 };
 

@@ -98,6 +98,8 @@ const App: React.FC = () => {
               fullEntries={fullEntries}
               userId={user?.id}
               mode={mode}
+              todayMood={todayMood}
+              displayName={profile.greeting || profile.displayName}
               onSaveDiary={saveEntry}
             />
           ) : hasBirthdate ? (
