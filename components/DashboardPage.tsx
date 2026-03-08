@@ -22,13 +22,38 @@ import type { AppMode } from "../lib/theme";
 
 const LOW_MOODS = new Set(["😔", "😢"]);
 
-// ADHD-optimized: each mood has its own strong color identity
+// ADHD-optimized: each mood has its own strong color identity + instant AI response
 const MOODS = [
-  { emoji: "😄", label: "Amazing",    energy: 5, color: "#00ff9d", glow: "#00ff9d" },
-  { emoji: "🙂", label: "Good",       energy: 4, color: "#00d4ff", glow: "#00d4ff" },
-  { emoji: "😐", label: "Okay",       energy: 3, color: "#ffd700", glow: "#ffd700" },
-  { emoji: "😔", label: "Low",        energy: 2, color: "#ff6b00", glow: "#ff6b00" },
-  { emoji: "😢", label: "Struggling", energy: 1, color: "#ec4899", glow: "#ec4899" },
+  { emoji: "😄", label: "Amazing", energy: 5, color: "#00ff9d", glow: "#00ff9d", responses: [
+    "That energy is contagious! You're literally lighting up the world today. 🌟",
+    "Amazing days are proof that life rewards those who keep going. Enjoy every second!",
+    "Your joy right now? It took years of resilience to build. You earned this. ✨",
+    "This is the version of you that future-you will look back on with pride.",
+  ]},
+  { emoji: "🙂", label: "Good", energy: 4, color: "#00d4ff", glow: "#00d4ff", responses: [
+    "Good is powerful. Consistency in good days builds an extraordinary life. 💙",
+    "A good day is never 'just' good — it's the foundation everything great is built on.",
+    "You're in flow today. That quiet confidence? It's your superpower.",
+    "The best days often don't feel dramatic — they feel exactly like this. Steady and strong.",
+  ]},
+  { emoji: "😐", label: "Okay", energy: 3, color: "#ffd700", glow: "#ffd700", responses: [
+    "'Okay' is honest, and honesty takes courage. Tomorrow might surprise you. 🌤",
+    "Even neutral days move you forward. You're still here, still growing.",
+    "Not every day needs to be a highlight. Rest days count too.",
+    "An 'okay' day is still a day you showed up. That matters more than you think.",
+  ]},
+  { emoji: "😔", label: "Low", energy: 2, color: "#ff6b00", glow: "#ff6b00", responses: [
+    "Low days are not failures — they're signals that you need care right now. Be gentle with yourself. 🧡",
+    "You've survived 100% of your worst days. This one won't break that streak.",
+    "\"The wound is the place where the light enters you.\" — Rumi. Rest. Heal. Rise.",
+    "It's okay to not be okay. Your strength isn't measured by how you feel today — it's measured by the fact that you're still here.",
+  ]},
+  { emoji: "😢", label: "Struggling", energy: 1, color: "#ec4899", glow: "#ec4899", responses: [
+    "I see you. This pain is real, but it is not permanent. You are stronger than this moment. 💗",
+    "Right now is hard. But you've made it through hard before. You will again.",
+    "\"Stars can't shine without darkness.\" You're in the dark right now, but your light hasn't gone out.",
+    "Please talk to someone you trust today. You deserve support. You are not alone. 🤝",
+  ]},
 ];
 
 // Solid card styles — NO translucent whites
@@ -219,11 +244,29 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               );
             })}
           </div>
-          {todayMood && (
-            <p className="text-center text-xs text-white/60 mt-4">
-              {MOODS.find((m) => m.emoji === todayMood.mood)?.label} · Resets in 3 hours
-            </p>
-          )}
+          {todayMood && (() => {
+            const mood = MOODS.find((m) => m.emoji === todayMood.mood);
+            if (!mood) return null;
+            // Pick a response based on the hour so it changes throughout the day
+            const responseIdx = new Date().getHours() % mood.responses.length;
+            return (
+              <motion.div
+                key={todayMood.mood + todayMood.date}
+                className="mt-5 p-4 rounded-2xl text-center"
+                style={{ backgroundColor: `${mood.color}10`, border: `1px solid ${mood.color}25` }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <p className="text-sm leading-relaxed" style={{ color: `${mood.color}dd` }}>
+                  {mood.responses[responseIdx]}
+                </p>
+                <p className="text-[0.6rem] text-white/30 mt-2">
+                  {mood.label} · Resets in 3 hours
+                </p>
+              </motion.div>
+            );
+          })()}
           {recentMoods.length > 1 && (
             <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-[#1e3a5f]">
               {recentMoods.slice(0, 7).map((m) => <span key={m.date} className="text-lg" title={m.date}>{m.mood}</span>)}
