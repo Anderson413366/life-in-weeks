@@ -57,13 +57,15 @@ Return ONLY the raw JSON array, no markdown, no explanation.`;
         config: { temperature: 0.7, maxOutputTokens: 1024 },
       });
 
-      const text = (response.text ?? "").replace(/```json\n?|```/g, "").trim();
-      const parsed: FamousPerson[] = JSON.parse(text);
+      const raw = (response.text ?? "").replace(/```json\n?|```/g, "").trim();
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error("No JSON array found");
+      const parsed: FamousPerson[] = JSON.parse(jsonMatch[0]);
       setPeople(parsed);
       localStorage.setItem(cacheKey, JSON.stringify({ data: parsed, expiry: Date.now() + EXPIRY }));
-    } catch (e) {
+    } catch (e: any) {
       setError("Failed to load");
-      console.error(e);
+      console.error("Famous birthdays error:", e);
     } finally {
       setLoading(false);
       setFetched(true);

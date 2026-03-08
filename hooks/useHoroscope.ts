@@ -66,11 +66,14 @@ Generate a ${period === "today" ? "daily" : period === "week" ? "weekly" : "year
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        config: { temperature: 0.8, maxOutputTokens: 512 },
+        config: { temperature: 0.8, maxOutputTokens: 1024 },
       });
 
-      const text = (response.text ?? "").replace(/```json\n?|```/g, "").trim();
-      const parsed: HoroscopeResult = JSON.parse(text);
+      const raw = (response.text ?? "").replace(/```json\n?|```/g, "").trim();
+      // Extract JSON object from response (may have thinking tokens around it)
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON found in response");
+      const parsed: HoroscopeResult = JSON.parse(jsonMatch[0]);
       setResult(parsed);
       setCache(cacheKey, parsed, period);
     } catch (e: any) {

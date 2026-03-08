@@ -113,15 +113,8 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
     >
       {/* Sticky frosted glass header */}
       <div style={{
-        background: "rgba(13, 27, 46, 0.7)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(0, 212, 255, 0.15)",
-        padding: "20px 16px 16px",
-        marginBottom: 24,
-        position: "sticky",
-        top: 64,
-        zIndex: 10,
+        padding: "16px 16px 8px",
+        marginBottom: 16,
       }}>
         {/* Title */}
         <div className="text-center mb-3">
@@ -141,30 +134,30 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
         </div>
 
         {/* Mode Switcher */}
-        <div className="flex justify-center gap-2">
-        {MODE_LABELS.map(({ key, icon, label }) => (
-          <button
-            key={key}
-            onClick={() => setGridMode(key)}
-            className="flex items-center gap-1.5 transition-all"
-            style={{
-              padding: "10px 24px",
-              borderRadius: 100,
-              border: gridMode === key ? "none" : `1px solid ${ACCENT[key]}44`,
-              background: gridMode === key ? `linear-gradient(135deg, ${ACCENT[key]}cc, ${ACCENT[key]}66)` : "transparent",
-              color: gridMode === key ? "#fff" : ACCENT[key],
-              fontWeight: gridMode === key ? 700 : 500,
-              fontSize: "0.85rem",
-              boxShadow: gridMode === key ? `0 0 20px ${ACCENT[key]}44` : "none",
-            }}
-          >
-            <span className="text-xs">{icon}</span> {label}
-          </button>
-        ))}
-      </div>
+        <div className="flex justify-center gap-2 mb-3">
+          {MODE_LABELS.map(({ key, icon, label }) => (
+            <button
+              key={key}
+              onClick={() => setGridMode(key)}
+              className="flex items-center gap-1.5 transition-all"
+              style={{
+                padding: "8px 20px",
+                borderRadius: 100,
+                border: gridMode === key ? "none" : `1px solid ${ACCENT[key]}44`,
+                background: gridMode === key ? `linear-gradient(135deg, ${ACCENT[key]}cc, ${ACCENT[key]}66)` : "transparent",
+                color: gridMode === key ? "#fff" : ACCENT[key],
+                fontWeight: gridMode === key ? 700 : 500,
+                fontSize: "0.8rem",
+                boxShadow: gridMode === key ? `0 0 20px ${ACCENT[key]}44` : "none",
+              }}
+            >
+              <span className="text-[0.65rem]">{icon}</span> {label}
+            </button>
+          ))}
+        </div>
 
-      {/* Legend */}
-      <div className="flex justify-center gap-6 pb-4 px-4">
+        {/* Legend */}
+        <div className="flex justify-center gap-4 sm:gap-6">
         {[
           { label: "Lived", color: ACCENT[gridMode] },
           { label: "Now", color: CURRENT_C[gridMode] },
@@ -190,6 +183,22 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
       {/* Grid */}
       <div className="overflow-x-auto px-4 pb-8">
         <div className="flex flex-col mx-auto" style={{ gap: `${GAP[gridMode]}px`, width: "fit-content" }}>
+          {/* Column header row — week/month numbers */}
+          {(gridMode === "weeks" || gridMode === "months") && (
+            <div className="flex items-center" style={{ gap: `${GAP[gridMode]}px` }}>
+              <div style={{ width: 32, minWidth: 32 }} />
+              {Array.from({ length: cols }, (_, i) => (
+                <div key={i} className="flex items-center justify-center shrink-0 select-none" style={{
+                  width: CELL[gridMode], height: CELL[gridMode] * 0.8, minWidth: CELL[gridMode],
+                  fontSize: gridMode === "weeks" ? "0.4rem" : "0.5rem",
+                  color: "rgba(0, 212, 255, 0.35)",
+                  fontWeight: 600,
+                }}>
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+          )}
           {Array.from({ length: rows }, (_, rowIndex) => {
             const rowLabel = getRowLabel(rowIndex);
             return (
