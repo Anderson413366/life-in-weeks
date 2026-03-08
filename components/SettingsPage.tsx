@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { getApiKey } from "../lib/ai";
 import { DEFAULT_AVERAGES, type UserAverages } from "../types";
+import type { AppMode } from "../lib/theme";
 import SectionHeading from "./SectionHeading";
 import LifeExpectancyCalculator from "./LifeExpectancyCalculator";
 
@@ -14,6 +15,8 @@ interface SettingsPageProps {
   phone: string;
   avatarUrl: string;
   averages: UserAverages;
+  mode: AppMode;
+  onModeChange: (mode: AppMode) => void;
   onBirthdateChange: (v: string) => void;
   onLifeExpectancyChange: (v: number) => void;
   onDisplayNameChange: (v: string) => void;
@@ -64,7 +67,7 @@ const AVG_FIELDS: AvgField[] = [
 ];
 
 const SettingsPage: React.FC<SettingsPageProps> = ({
-  birthdate, lifeExpectancy, displayName, preferredName, email, phone, avatarUrl, averages,
+  birthdate, lifeExpectancy, displayName, preferredName, email, phone, avatarUrl, averages, mode, onModeChange,
   onBirthdateChange, onLifeExpectancyChange, onDisplayNameChange, onPreferredNameChange,
   onPhoneChange, onAvatarChange, onApiKeyChange, onAveragesChange, onSignOut,
 }) => {
@@ -244,8 +247,38 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </motion.section>
 
-      {/* ── Account ──────────────────────────────────────────── */}
+      {/* ── Display Mode ────────────────────────────────────── */}
       <motion.section custom={3} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Display Mode" />
+        <div className="glass rounded-xl p-5 sm:p-6">
+          <div className="flex gap-3">
+            {([
+              { id: "zen" as AppMode, label: "Zen Mode", desc: "Cosmic gradients, soft glows, breathing animations", icon: "🌌" },
+              { id: "focus" as AppMode, label: "Focus Mode", desc: "High contrast, zero distractions, binary clarity", icon: "⚡" },
+            ]).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => onModeChange(m.id)}
+                className={`flex-1 p-4 rounded-xl border text-left transition-all ${
+                  mode === m.id
+                    ? "border-primary bg-primary/10"
+                    : "border-box-border/50 hover:border-primary/30"
+                }`}
+              >
+                <div className="text-2xl mb-2">{m.icon}</div>
+                <div className={`text-sm font-semibold mb-1 ${mode === m.id ? "text-primary" : "text-white"}`}>{m.label}</div>
+                <div className="text-[0.6rem] text-text-muted leading-relaxed">{m.desc}</div>
+              </button>
+            ))}
+          </div>
+          <p className="text-[0.55rem] text-text-muted/40 text-center mt-3">
+            Zen is ideal for relaxed exploration. Focus is designed for ADHD, OCD, and sensory sensitivity.
+          </p>
+        </div>
+      </motion.section>
+
+      {/* ── Account ──────────────────────────────────────────── */}
+      <motion.section custom={4} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Account" />
         <div className="glass rounded-xl p-5 sm:p-6 flex flex-col gap-4 items-center">
           <button

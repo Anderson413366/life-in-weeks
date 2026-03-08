@@ -16,6 +16,10 @@ import SectionHeading from "./SectionHeading";
 import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
 import type { MoodEntry } from "../hooks/useMood";
+import type { AppMode } from "../lib/theme";
+
+// Low-mood emojis that should trigger compassionate mode
+const LOW_MOODS = new Set(["😔", "😢"]);
 
 interface DashboardPageProps {
   lifeStats: LifeStats;
@@ -27,6 +31,7 @@ interface DashboardPageProps {
   averages: UserAverages;
   todayMood: MoodEntry | null;
   recentMoods: MoodEntry[];
+  mode: AppMode;
   onSaveMood: (mood: string, energy: number, note?: string) => Promise<void>;
 }
 
@@ -38,10 +43,12 @@ const section = {
   }),
 };
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay, averages, todayMood, recentMoods, onSaveMood }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay, averages, todayMood, recentMoods, mode, onSaveMood }) => {
   const pct = parseFloat(lifeStats.percentageLived);
   const birthDate = useMemo(() => new Date(birthYear, birthMonth - 1, birthDay), [birthYear, birthMonth, birthDay]);
   const now = useMemo(() => new Date(), []);
+  const isLowMood = todayMood ? LOW_MOODS.has(todayMood.mood) : false;
+  void mode; // used for future focus mode styling
 
   const biology = useMemo(() => getBiologyStats(birthDate, now, averages), [birthDate, now, averages]);
   const cosmic = useMemo(() => getCosmicStats(birthDate, now), [birthDate, now]);
@@ -103,25 +110,27 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
 
       {/* ── Life at a Glance ─────────────────────────────────── */}
       <motion.section custom={3} initial="hidden" animate="visible" variants={section}>
-        <SectionHeading title="Life at a Glance" />
+        <SectionHeading title={isLowMood ? "Look How Far You've Come" : "Life at a Glance"} />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard value={lifeStats.daysPassed}    label="Days Lived"      variant="daysLived"      index={0} />
-          <StatCard value={lifeStats.daysRemaining}  label="Days Remaining"  variant="daysRemaining"  index={1} />
+          {!isLowMood && <StatCard value={lifeStats.daysRemaining}  label="Days Remaining"  variant="daysRemaining"  index={1} />}
           <StatCard value={lifeStats.weeksPassed}    label="Weeks Lived"     variant="weeksLived"     index={2} />
-          <StatCard value={lifeStats.weeksRemaining} label="Weeks Remaining" variant="weeksRemaining" index={3} />
+          {!isLowMood && <StatCard value={lifeStats.weeksRemaining} label="Weeks Remaining" variant="weeksRemaining" index={3} />}
+          {isLowMood && <StatCard value={numbers.laughs} label="Times You've Laughed" variant="daysLived" index={1} />}
+          {isLowMood && <StatCard value={cosmic.sunrises} label="Sunrises You've Seen" variant="weeksLived" index={3} />}
         </div>
       </motion.section>
 
       {/* ── Live Chronometer ─────────────────────────────────── */}
       <motion.section custom={4} initial="hidden" animate="visible" variants={section}>
-        <SectionHeading title="Live Chronometer" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        <SectionHeading title={isLowMood ? "Every Second Is a Gift" : "Live Chronometer"} />
+        <div className={`grid ${isLowMood ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"} gap-2 sm:gap-3`}>
           <StatCard value={dynamicStats.hoursLived}       label="Hours Lived"   variant="mini" index={0} live />
           <StatCard value={dynamicStats.minutesLived}     label="Minutes Lived" variant="mini" index={1} live />
           <StatCard value={dynamicStats.secondsLived}     label="Seconds Lived" variant="mini" index={2} live />
-          <StatCard value={dynamicStats.hoursRemaining}   label="Hours Rem."    variant="mini" index={3} live />
-          <StatCard value={dynamicStats.minutesRemaining} label="Minutes Rem."  variant="mini" index={4} live />
-          <StatCard value={dynamicStats.secondsRemaining} label="Seconds Rem."  variant="mini" index={5} live />
+          {!isLowMood && <StatCard value={dynamicStats.hoursRemaining}   label="Hours Rem."    variant="mini" index={3} live />}
+          {!isLowMood && <StatCard value={dynamicStats.minutesRemaining} label="Minutes Rem."  variant="mini" index={4} live />}
+          {!isLowMood && <StatCard value={dynamicStats.secondsRemaining} label="Seconds Rem."  variant="mini" index={5} live />}
         </div>
       </motion.section>
 
