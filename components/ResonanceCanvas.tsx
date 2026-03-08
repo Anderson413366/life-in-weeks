@@ -14,36 +14,37 @@ interface ResonanceCanvasProps {
 }
 
 const COLS = 52;
-const BASE_CELL = 14;
+const BASE_CELL = 18;
 const GAP = 2;
-const LABEL_W = 28;
-const HEADER_H = 16;
+const LABEL_W = 32;
+const HEADER_H = 22;
 
-// Colors
 const ZEN = {
   past: "#00d4ff",
-  pastDim: "#006880",
   current: "#ff6b6b",
-  future: "#1a1a3a",
-  futureBorder: "#2a2a4e",
+  future: "#1f1f3a",
+  futureBorder: "#3a3a5e",
   diary: "#ffd700",
-  decade: "#ffd70060",
+  decade: "#ffd70080",
   bg: "#0a0a23",
-  label: "#5a5a7a",
-  header: "#00d4ff80",
+  label: "#00d4ff",
+  labelDim: "#00d4ff90",
+  header: "#00d4ff",
+  headerBg: "rgba(0,0,0,0.15)",
 };
 
 const FOCUS = {
   past: "#ffffff",
-  pastDim: "#888888",
   current: "#ffffff",
   future: "#1a1a1a",
   futureBorder: "#333333",
   diary: "#ffffff",
-  decade: "#ffffff40",
+  decade: "#ffffff50",
   bg: "#000000",
-  label: "#666666",
-  header: "#888888",
+  label: "#888888",
+  labelDim: "#666666",
+  header: "#aaaaaa",
+  headerBg: "rgba(255,255,255,0.03)",
 };
 
 const ResonanceCanvas: React.FC<ResonanceCanvasProps> = ({
@@ -66,55 +67,67 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = ({
     canvas.height = h * dpr;
     ctx.scale(dpr, dpr);
 
-    const colors = mode === "focus" ? FOCUS : ZEN;
+    const C = mode === "focus" ? FOCUS : ZEN;
     const cell = BASE_CELL * zoom;
     const gap = GAP * zoom;
     const step = cell + gap;
     const labelW = LABEL_W * zoom;
     const headerH = HEADER_H * zoom;
     const time = timeRef.current;
+    const fontSize = Math.max(8, Math.min(12, 10 * zoom));
 
     // Background
-    ctx.fillStyle = colors.bg;
+    ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, w, h);
 
     ctx.save();
     ctx.translate(offsetX, offsetY);
 
-    // Header labels (week numbers) — only at zoom > 1.2
-    if (zoom > 1.2) {
-      ctx.font = `${Math.min(10 * zoom, 14)}px system-ui`;
-      ctx.fillStyle = colors.header;
-      ctx.textAlign = "center";
-      for (let c = 0; c < COLS; c++) {
-        const x = labelW + c * step + cell / 2;
-        if (x + offsetX > -step && x + offsetX < w + step) {
-          ctx.fillText(`${c + 1}`, x, headerH - 2 * zoom);
-        }
-      }
+    // ── Header row: week numbers 1–52 ──────────────────────
+    ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    for (let c = 0; c < COLS; c++) {
+      const x = labelW + c * step;
+      const cx = x + cell / 2;
+
+      // Skip if off-screen
+      if (cx + offsetX < -step || cx + offsetX > w + step) continue;
+
+      // Background pill
+      ctx.fillStyle = C.headerBg;
+      ctx.beginPath();
+      ctx.roundRect(x, 0, cell, headerH - 2 * zoom, 2);
+      ctx.fill();
+
+      // Number
+      ctx.fillStyle = C.header;
+      ctx.fillText(`${c + 1}`, cx, (headerH - 2 * zoom) / 2);
     }
 
-    // Rows
+    // ── Year rows ──────────────────────────────────────────
     for (let row = 0; row < totalYears; row++) {
       const y = headerH + row * step;
 
       // Cull off-screen rows
-      if (y + offsetY > h + step || y + offsetY < -step) continue;
+      if (y + offsetY > h + step) continue;
+      if (y + offsetY + cell < -step) continue;
 
-      // Year label — only at zoom > 1.0
-      if (zoom > 1.0) {
-        ctx.font = `${Math.min(10 * zoom, 13)}px system-ui`;
-        ctx.fillStyle = colors.label;
-        ctx.textAlign = "right";
-        ctx.fillText(`${row}`, labelW - 4 * zoom, y + cell * 0.8);
-      }
+      // Year label
+      ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = row % 10 === 0 ? C.label : C.labelDim;
+      ctx.fillText(`${row}`, labelW - 4 * zoom, y + cell / 2);
 
-      // Decade marker
+      // Decade marker line
       if (row > 0 && row % 10 === 0) {
-        ctx.fillStyle = colors.decade;
-        ctx.fillRect(labelW - 2 * zoom, y, 1 * zoom, cell);
+        ctx.fillStyle = C.decade;
+        ctx.fillRect(labelW, y - gap / 2, COLS * step - gap, 1);
       }
 
+      // Week cells
       for (let col = 0; col < COLS; col++) {
         const x = labelW + col * step;
 
@@ -126,45 +139,56 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = ({
         const isCurrent = idx === weeksPassed;
         const hasDiary = !!diaryEntries[idx.toString()];
 
+        // Reset shadow
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+
         if (isCurrent) {
           // Pulsing current week
           const pulse = mode === "focus" ? 1 : 0.6 + 0.4 * Math.sin(time * 3);
           ctx.globalAlpha = pulse;
-          ctx.fillStyle = colors.current;
-          ctx.fillRect(x, y, cell, cell);
-          ctx.globalAlpha = 1;
 
-          // Glow in zen mode
           if (mode === "zen") {
-            ctx.shadowColor = colors.current;
-            ctx.shadowBlur = 8 * zoom;
-            ctx.fillStyle = colors.current;
-            ctx.fillRect(x, y, cell, cell);
-            ctx.shadowBlur = 0;
+            ctx.shadowColor = C.current;
+            ctx.shadowBlur = 10 * zoom;
           }
+          ctx.fillStyle = C.current;
+          ctx.beginPath();
+          ctx.roundRect(x, y, cell, cell, 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 1;
         } else if (isPast) {
-          // Past week — intensity based on recency
-          const recency = Math.max(0.3, 1 - (weeksPassed - idx) / (weeksPassed || 1));
-          ctx.fillStyle = mode === "zen"
-            ? `rgba(0, 212, 255, ${0.3 + recency * 0.7})`
-            : `rgba(255, 255, 255, ${0.2 + recency * 0.8})`;
-          ctx.fillRect(x, y, cell, cell);
+          // Past week — subtle intensity gradient
+          const intensity = Math.max(0.4, Math.min(1, 0.4 + (idx / (weeksPassed || 1)) * 0.6));
+          if (mode === "zen") {
+            ctx.fillStyle = `rgba(0, 212, 255, ${intensity})`;
+          } else {
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + intensity * 0.7})`;
+          }
+          ctx.beginPath();
+          ctx.roundRect(x, y, cell, cell, 2);
+          ctx.fill();
         } else {
           // Future week
-          ctx.fillStyle = colors.future;
-          ctx.fillRect(x, y, cell, cell);
-          ctx.strokeStyle = colors.futureBorder;
+          ctx.fillStyle = C.future;
+          ctx.beginPath();
+          ctx.roundRect(x, y, cell, cell, 2);
+          ctx.fill();
+          ctx.strokeStyle = C.futureBorder;
           ctx.lineWidth = 0.5;
-          ctx.strokeRect(x, y, cell, cell);
+          ctx.stroke();
         }
 
-        // Diary marker
+        // Diary dot
         if (hasDiary) {
-          const dotR = Math.max(1.5, 2 * zoom);
+          const dotR = Math.max(2, 2.5 * zoom);
           ctx.beginPath();
           ctx.arc(x + cell / 2, y + cell / 2, dotR, 0, Math.PI * 2);
-          ctx.fillStyle = colors.diary;
+          ctx.fillStyle = C.diary;
+          ctx.globalAlpha = 0.85;
           ctx.fill();
+          ctx.globalAlpha = 1;
         }
       }
     }
