@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import type { LifeStats, DynamicStats } from "../types";
+import type { LifeStats, DynamicStats, UserAverages } from "../types";
 import {
   getBiologyStats, getCosmicStats, getLifeInNumbers,
   getTimeSpent, getBirthdayCountdown, getAlternativeAges,
@@ -21,6 +21,7 @@ interface DashboardPageProps {
   birthYear: number;
   birthMonth: number;
   birthDay: number;
+  averages: UserAverages;
 }
 
 const section = {
@@ -31,15 +32,15 @@ const section = {
   }),
 };
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay, averages }) => {
   const pct = parseFloat(lifeStats.percentageLived);
   const birthDate = useMemo(() => new Date(birthYear, birthMonth - 1, birthDay), [birthYear, birthMonth, birthDay]);
   const now = useMemo(() => new Date(), []);
 
-  const biology = useMemo(() => getBiologyStats(birthDate, now), [birthDate, now]);
+  const biology = useMemo(() => getBiologyStats(birthDate, now, averages), [birthDate, now, averages]);
   const cosmic = useMemo(() => getCosmicStats(birthDate, now), [birthDate, now]);
-  const numbers = useMemo(() => getLifeInNumbers(birthDate, now), [birthDate, now]);
-  const timeSpent = useMemo(() => getTimeSpent(birthDate, now), [birthDate, now]);
+  const numbers = useMemo(() => getLifeInNumbers(birthDate, now, averages), [birthDate, now, averages]);
+  const timeSpent = useMemo(() => getTimeSpent(birthDate, now, averages), [birthDate, now, averages]);
   const birthday = useMemo(() => getBirthdayCountdown(birthDate, now), [birthDate, now]);
   const altAges = useMemo(() => getAlternativeAges(birthDate, now), [birthDate, now]);
 
@@ -112,12 +113,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
       <motion.section custom={5} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Body & Biology" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <DataCard icon="💓" value={biology.heartbeats}  label="Heartbeats"      sublabel="~72 bpm average"   color="#ff6b6b" index={0} />
-          <DataCard icon="🌬️" value={biology.breaths}    label="Breaths Taken"   sublabel="~15 per minute"    color="#00d4ff" index={1} />
-          <DataCard icon="👁️" value={biology.blinks}     label="Blinks"          sublabel="~17 per minute awake" color="#8e44ad" index={2} />
+          <DataCard icon="💓" value={biology.heartbeats}  label="Heartbeats"      sublabel={`~${averages.avg_heartbeats_per_min} bpm`}   color="#ff6b6b" index={0} />
+          <DataCard icon="🌬️" value={biology.breaths}    label="Breaths Taken"   sublabel={`~${averages.avg_breaths_per_min}/min`}    color="#00d4ff" index={1} />
+          <DataCard icon="👁️" value={biology.blinks}     label="Blinks"          sublabel={`~${averages.avg_blinks_per_min}/min awake`} color="#8e44ad" index={2} />
           <DataCard icon="😴" value={`${biology.yearsSlept} yrs`} label="Time Spent Sleeping" sublabel={`${biology.hoursSlept.toLocaleString()} hours total`} color="#2196F3" index={3} />
-          <DataCard icon="🍽️" value={numbers.mealsEaten} label="Meals Eaten"     sublabel="~3 per day"        color="#ff9f43" index={4} />
-          <DataCard icon="😄" value={numbers.laughs}     label="Times Laughed"   sublabel="~15 per day"       color="#ffd700" index={5} />
+          <DataCard icon="🍽️" value={numbers.mealsEaten} label="Meals Eaten"     sublabel={`~${averages.meals_per_day}/day`}        color="#ff9f43" index={4} />
+          <DataCard icon="😄" value={numbers.laughs}     label="Times Laughed"   sublabel={`~${averages.avg_laughs_per_day}/day`}       color="#ffd700" index={5} />
         </div>
       </motion.section>
 
