@@ -1,4 +1,4 @@
-const CACHE_NAME = "liw-v1";
+const CACHE_NAME = "liw-v2";
 const PRECACHE_URLS = ["/", "/index.html"];
 
 // Install: cache shell

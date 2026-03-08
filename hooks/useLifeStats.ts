@@ -36,6 +36,9 @@ const EMPTY_DYNAMIC: DynamicStats = {
 };
 
 export function useLifeStats(birthdate: string, totalYears: number) {
+  // Recalculate when the calendar date changes (not just birthdate/totalYears)
+  const todayKey = new Date().toDateString();
+
   const lifeStats = useMemo<LifeStats | null>(() => {
     if (!birthdate) return null;
 
@@ -74,7 +77,8 @@ export function useLifeStats(birthdate: string, totalYears: number) {
       currentDateFormatted: format(today, "MMM d, yyyy"),
       totalLifeSeconds: totalLifeDays * HOURS_IN_DAY * MINUTES_IN_HOUR * SECONDS_IN_MINUTE,
     };
-  }, [birthdate, totalYears]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [birthdate, totalYears, todayKey]);
 
   const [dynamicStats, setDynamicStats] = useState<DynamicStats>(EMPTY_DYNAMIC);
 
