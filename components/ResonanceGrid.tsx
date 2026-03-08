@@ -11,6 +11,7 @@ import ResonanceCanvas from "./ResonanceCanvas";
 import LifeBattery from "./LifeBattery";
 import DiaryModal from "./DiaryModal";
 import LegacySnapshot from "./LegacySnapshot";
+import HelpModal from "./HelpModal";
 import Tooltip from "./Tooltip";
 
 interface ResonanceGridProps {
@@ -34,6 +35,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   const [showSnapshot, setShowSnapshot] = useState(false);
   const [hudVisible, setHudVisible] = useState(true);
   const [immersive, setImmersive] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [hoverInfo] = useState<HoverInfo | null>(null);
   const hudTimerRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,10 +142,11 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
                 <div className={`flex items-center gap-3 ${controlCls} rounded-xl px-3 py-2 pointer-events-auto`}>
                   <LifeBattery percentUsed={pct} size="sm" />
                 </div>
-                <div className={`flex items-center gap-3 ${controlDimCls} rounded-xl px-3 py-2 text-xs`}>
+                <div className={`flex items-center gap-3 ${controlDimCls} rounded-xl px-3 py-2 text-xs pointer-events-auto`}>
                   <span>Wk <strong className="text-white">{lifeStats.currentWeekInYear}</strong></span>
                   <span>Yr <strong className="text-white">{lifeStats.currentYearOfLife}</strong></span>
                   {entryCount > 0 && <span>📝 {entryCount}</span>}
+                  <button onClick={() => setShowHelp(true)} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isFocus ? "bg-white/10 text-white" : "bg-primary/20 text-primary"} hover:bg-primary/30 transition-colors`} title="Help">?</button>
                 </div>
               </motion.div>
             )}
@@ -233,6 +236,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
         lifeStats={lifeStats} birthYear={birthYear} birthMonth={birthMonth} birthDay={birthDay}
         displayName={displayName} todayMood={todayMood}
       />
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </>
   );
 };
