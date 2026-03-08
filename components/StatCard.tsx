@@ -1,76 +1,52 @@
+import React from "react";
+import { motion } from "framer-motion";
+import AnimatedCounter from "./AnimatedCounter";
 
-import React from 'react';
-import { motion } from 'framer-motion';
+type Variant = "default" | "mini" | "daysLived" | "daysRemaining" | "weeksLived" | "weeksRemaining" | "waking";
 
 interface StatCardProps {
-  value: string | number;
+  value: number;
   label: string;
-  variant?: 'default' | 'mini' | 'daysLived' | 'daysRemaining' | 'weeksLived' | 'weeksRemaining';
-  className?: string;
-  index?: number; // For staggered animation
+  variant?: Variant;
+  index?: number;
+  sublabel?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ value, label, variant = 'default', className = "", index = 0 }) => {
-  const valueClass = variant === 'mini' 
-    ? "text-2xl sm:text-3xl lg:text-4xl" 
-    : "text-3xl sm:text-4xl lg:text-5xl";
-  
-  const paddingClass = variant === 'mini' ? "p-3 sm:p-4" : "p-4 sm:p-5";
+const STYLES: Record<string, { text: string; border: string; glow: string }> = {
+  daysLived:      { text: "from-[#e0f7fa] to-primary",  border: "from-primary to-[#0088ff]",  glow: "glow-cyan" },
+  weeksLived:     { text: "from-[#e0f7fa] to-primary",  border: "from-primary to-[#0088ff]",  glow: "glow-cyan" },
+  daysRemaining:  { text: "from-[#fff3e0] to-accent",   border: "from-[#ff9f43] to-accent",   glow: "glow-coral" },
+  weeksRemaining: { text: "from-[#fff3e0] to-accent",   border: "from-[#ff9f43] to-accent",   glow: "glow-coral" },
+  waking:         { text: "from-[#f3e5f5] to-[#8e44ad]", border: "from-[#8e44ad] to-[#6c3483]", glow: "glow-purple" },
+  default:        { text: "from-white to-gray-300",       border: "from-primary to-accent",       glow: "" },
+  mini:           { text: "from-white to-gray-400",       border: "from-primary/60 to-accent/60", glow: "" },
+};
 
-  let gradientTextClass = "text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300";
-  if (variant === 'daysLived' || variant === 'weeksLived') {
-    gradientTextClass = "text-transparent bg-clip-text bg-gradient-to-b from-[#e0f7fa] to-primary";
-  } else if (variant === 'daysRemaining' || variant === 'weeksRemaining') {
-     gradientTextClass = "text-transparent bg-clip-text bg-gradient-to-b from-[#fff3e0] to-accent";
-  }
-
-  let borderGradient = "bg-gradient-to-r from-primary to-accent";
-  if (variant === 'daysLived' || variant === 'weeksLived') {
-    borderGradient = "bg-gradient-to-r from-primary to-[#0088ff]"; // Example secondary primary color
-  } else if (variant === 'daysRemaining' || variant === 'weeksRemaining') {
-    borderGradient = "bg-gradient-to-r from-[#ff9f43] to-accent"; // Example secondary accent color
-  }
-
-  // Framer Motion variants for subtle appearance
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.4,
-        delay: index * 0.05, // Stagger animation based on index
-        ease: "easeOut" 
-      } 
-    },
-  };
+const StatCard: React.FC<StatCardProps> = ({ value, label, variant = "default", index = 0, sublabel }) => {
+  const isMini = variant === "mini";
+  const s = STYLES[variant] ?? STYLES.default;
 
   return (
-    <motion.div 
-      className={`bg-card-bg rounded-lg text-center shadow-xl border border-[rgba(255,255,255,0.08)] 
-                    backdrop-blur-md flex flex-col items-center justify-center transition-all duration-200 ease-in-out 
-                    hover:transform hover:-translate-y-1 hover:shadow-2xl relative overflow-hidden h-full 
-                    ${paddingClass} ${className}`}
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      // ADHD/Accessibility: Announce changes to screen readers if values are highly dynamic and critical.
-      // For slowly ticking numbers, it might be too verbose. For this app, it's likely fine without aria-live on each card,
-      // as the values update frequently and their primary consumption is visual.
-      // However, if a specific stat was a key action trigger, `aria-live="polite"` would be useful.
+    <motion.div
+      className={`glass glass-hover rounded-xl text-center shadow-xl flex flex-col items-center justify-center relative overflow-hidden h-full
+                  ${isMini ? "p-3 sm:p-4" : "p-5 sm:p-6"}`}
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.06, ease: "easeOut" }}
     >
-      <div className={`absolute top-0 left-0 right-0 h-1 opacity-70 ${borderGradient}`}></div>
-      <div 
-        className={`${valueClass} font-bold mb-1 leading-none ${gradientTextClass}`}
-        // Accessibility: if these numbers update very frequently and are critical,
-        // consider an aria-live region on a parent or a mechanism to announce significant changes.
-        // For this dashboard, the visual update is primary.
-      >
-        {typeof value === 'number' ? value.toLocaleString() : value}
+      {/* Top accent bar */}
+      <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${s.border}`} />
+
+      <div className={`font-bold mb-1.5 leading-none counter-digits text-transparent bg-clip-text bg-gradient-to-b ${s.text}
+                       ${isMini ? "text-xl sm:text-2xl" : "text-3xl sm:text-4xl"}`}>
+        <AnimatedCounter value={value} />
       </div>
-      <div className={`uppercase tracking-wider font-normal text-xs sm:text-sm text-text-muted ${variant === 'mini' ? 'text-xs' : 'text-sm'}`}>
+      <div className={`uppercase tracking-[0.15em] font-medium text-text-muted ${isMini ? "text-[0.55rem] sm:text-[0.65rem]" : "text-[0.6rem] sm:text-xs"}`}>
         {label}
       </div>
+      {sublabel && (
+        <div className="text-[0.5rem] text-text-muted/50 mt-1">{sublabel}</div>
+      )}
     </motion.div>
   );
 };

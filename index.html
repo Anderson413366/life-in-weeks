@@ -1,146 +1,47 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Life in Weeks</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: {
-            poppins: ['Poppins', 'sans-serif'],
-          },
+          fontFamily: { poppins: ['Poppins', 'sans-serif'] },
           colors: {
-            'primary': '#00d4ff',
-            'primary-dark': '#0097b5',
-            'primary-glow': 'rgba(0, 212, 255, 0.3)',
-            'accent': '#ff6b6b',
-            'accent-glow': 'rgba(255, 107, 107, 0.3)',
-            'bg-dark': '#0a0a23',
-            'bg-light': '#1f1f3a',
-            'text-main': '#ffffff',
-            'text-muted': '#b4b4c7',
-            'box-border': '#3a3a5e',
-            'card-bg': 'rgba(25, 25, 55, 0.75)',
+            'primary':      '#00d4ff',
+            'primary-dark':  '#0097b5',
+            'primary-glow':  'rgba(0, 212, 255, 0.3)',
+            'accent':        '#ff6b6b',
+            'accent-glow':   'rgba(255, 107, 107, 0.3)',
+            'bg-dark':       '#0a0a23',
+            'bg-light':      '#1f1f3a',
+            'text-main':     '#ffffff',
+            'text-muted':    '#b4b4c7',
+            'box-border':    '#3a3a5e',
+            'card-bg':       'rgba(25, 25, 55, 0.75)',
             'decade-marker': '#ffd700',
-            'gemini-button-bg': '#8e44ad',
+            'gemini-button-bg':       '#8e44ad',
             'gemini-button-hover-bg': '#732d91',
-            // Shadcn/ui like colors (can be customized further)
-            border: "hsl(var(--border))", // Example: map to your theme's box-border
-            input: "hsl(var(--input))", // Example: map to your theme's box-border
-            ring: "hsl(var(--ring))", // Example: map to your theme's primary
-            background: "hsl(var(--background))", // Example: map to bg-dark
-            foreground: "hsl(var(--foreground))", // Example: map to text-main
-            destructive: {
-              DEFAULT: "hsl(var(--destructive))", // Example: map to accent
-              foreground: "hsl(var(--destructive-foreground))", // Example: map to text-main
-            },
-            muted: {
-              DEFAULT: "hsl(var(--muted))", // Example for muted elements
-              foreground: "hsl(var(--muted-foreground))", // Example text-muted
-            },
-          },
-          borderRadius: { // Common shadcn/ui radii
-            lg: "var(--radius)",
-            md: "calc(var(--radius) - 2px)",
-            sm: "calc(var(--radius) - 4px)",
           },
           keyframes: {
-            "accordion-down": {
-              from: { height: "0" },
-              to: { height: "var(--radix-accordion-content-height)" },
-            },
-            "accordion-up": {
-              from: { height: "var(--radix-accordion-content-height)" },
-              to: { height: "0" },
-            },
-            fadeIn: {
-              '0%': { opacity: '0' },
-              '100%': { opacity: '1' },
-            },
-            fadeInModal: { // Kept for reference, Framer Motion will handle modal
-              '0%': { opacity: '0', transform: 'scale(0.95) translateY(10px)' },
-              '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
-            },
-            'pulse-slow': 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'spin-slow': 'spin 1.5s linear infinite',
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            'pulse-slow': { '0%, 100%': { opacity: '1' }, '50%': { opacity: '.7' } },
           },
           animation: {
-            "accordion-down": "accordion-down 0.2s ease-out",
-            "accordion-up": "accordion-up 0.2s ease-out",
+            'fade-in': 'fadeIn 0.5s ease-out forwards',
             'pulse-slow': 'pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'fade-in': 'fadeIn 0.5s ease-out forwards', // added forwards
-            'spin-slow': 'spin-slow 1.5s linear infinite',
-          }
-        }
+          },
+        },
       },
-      // Define CSS variables for shadcn/ui compatibility if you were to use its components directly
-      // For now, we'll use Tailwind's arbitrary values or existing color names.
-      // This section is more for if you copy-paste shadcn components.
-      // corePlugins: {
-      //   preflight: false, // If you have global styles conflicting
-      // },
     }
   </script>
-  <style>
-    /* Define CSS variables that shadcn/ui might expect, mapping to your theme */
-    :root {
-      --background: 10 10 35; /* bg-dark: #0a0a23 */
-      --foreground: 0 0% 100%; /* text-main: #ffffff */
-      
-      /* Muted */
-      --muted: 240 5% 25%; /* A darker muted, adjust as needed */
-      --muted-foreground: 240 5% 70%; /* text-muted: #b4b4c7 */
-
-      /* Card */
-      --card: 240 17% 12%; /* card-bg: rgba(25, 25, 55, 0.75) - rough equivalent */
-      --card-foreground: 0 0% 100%; /* text-main for card text */
-      
-      /* Popover */
-      --popover: 240 17% 12%;
-      --popover-foreground: 0 0% 100%;
-
-      /* Primary */
-      --primary: 192 100% 50%; /* primary: #00d4ff */
-      --primary-foreground: 250 60% 5%; /* Dark text for primary buttons */
-
-      /* Secondary (define if needed) */
-      /* --secondary: ...; */
-      /* --secondary-foreground: ...; */
-
-      /* Accent/Destructive */
-      --destructive: 0 84% 60%; /* accent: #ff6b6b */
-      --destructive-foreground: 0 0% 100%;
-
-      /* Border */
-      --border: 240 17% 30%; /* box-border: #3a3a5e */
-      --input: 240 17% 30%; /*  input border */
-      --ring: 192 100% 50%; /* primary for focus rings */
-
-      --radius: 0.5rem; /* Default border radius for shadcn */
-    }
-  </style>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.4.0",
-    "date-fns": "https://esm.sh/date-fns@^4.1.0",
-    "firebase/": "https://esm.sh/firebase@^11.9.0/",
-    "framer-motion": "https://esm.sh/framer-motion@^11.2.12"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css" />
 </head>
 <body class="font-poppins bg-gradient-to-br from-bg-dark to-bg-light text-text-main flex justify-center items-start min-h-screen overflow-x-hidden antialiased">
-  <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root" class="w-full"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

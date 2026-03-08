@@ -1,23 +1,26 @@
 {
-  "name": "life-in-weeks---a-visual-journey",
+  "name": "life-in-weeks",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
     "@google/genai": "^1.4.0",
+    "@rollup/rollup-darwin-arm64": "^4.59.0",
+    "@supabase/supabase-js": "^2.49.0",
     "date-fns": "^4.1.0",
-    "firebase": "^11.9.0",
-    "framer-motion": "^11.2.12"
+    "framer-motion": "^11.2.12",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }
