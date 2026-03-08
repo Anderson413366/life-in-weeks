@@ -19,7 +19,7 @@ export function useProfile(userId: string | undefined) {
 
     async function load() {
       const { data } = await supabase
-        .from("profiles")
+        .from("liw_profiles")
         .select("birthdate, life_expectancy")
         .eq("id", userId)
         .single<Pick<Profile, "birthdate" | "life_expectancy">>();
@@ -43,7 +43,7 @@ export function useProfile(userId: string | undefined) {
       if (!userId) return;
 
       await supabase
-        .from("profiles")
+        .from("liw_profiles")
         .upsert({ id: userId, ...fields }, { onConflict: "id" });
     },
     [userId],

@@ -17,7 +17,7 @@ export function useDiary(userId: string | undefined) {
 
     async function load() {
       const { data } = await supabase
-        .from("diary_entries")
+        .from("liw_diary_entries")
         .select("week_index, content")
         .eq("user_id", userId)
         .returns<Pick<DiaryEntry, "week_index" | "content">[]>();
@@ -46,7 +46,7 @@ export function useDiary(userId: string | undefined) {
       if (trimmed === "") {
         // Delete entry
         await supabase
-          .from("diary_entries")
+          .from("liw_diary_entries")
           .delete()
           .eq("user_id", userId)
           .eq("week_index", weekIndex);
@@ -58,7 +58,7 @@ export function useDiary(userId: string | undefined) {
         });
       } else {
         // Upsert entry
-        await supabase.from("diary_entries").upsert(
+        await supabase.from("liw_diary_entries").upsert(
           { user_id: userId, week_index: weekIndex, content: trimmed },
           { onConflict: "user_id,week_index" },
         );
