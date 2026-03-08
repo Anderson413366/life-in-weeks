@@ -15,14 +15,14 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, defaul
     <div className="w-full">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between bg-white/[0.08] border border-white/[0.15] rounded-2xl px-6 py-4 group hover:bg-white/[0.12] hover:border-white/25 transition-all"
+        className="w-full flex items-center justify-between bg-[#0d1b2e] border border-[#1e3a5f] rounded-2xl px-6 py-4 group hover:bg-[#112240] hover:border-[#2a5298] transition-all"
       >
         <div className="flex items-center gap-3">
           <span className="text-lg">{icon}</span>
           <span className="text-white font-semibold text-base">{title}</span>
         </div>
         <motion.span
-          className="text-white text-sm"
+          className="text-[#4a9eff] text-sm"
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >

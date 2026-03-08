@@ -6,48 +6,50 @@ interface HelpModalProps {
   onClose: () => void;
 }
 
-const TIPS = [
-  { icon: "🔍", text: "Scroll or pinch to zoom in and out" },
-  { icon: "✋", text: "Drag to pan across your life grid" },
-  { icon: "👆", text: "Click any past week to write a diary entry" },
-  { icon: "⛶", text: "Full-screen immersive mode (bottom-right)" },
-  { icon: "✨", text: "Gradient orb shares a beautiful life snapshot" },
-  { icon: "🎙", text: "Floating mic button records voice journal entries" },
-  { icon: "📝", text: "Golden dots mark weeks with diary entries" },
-  { icon: "🔴", text: "Pulsing red = your current week" },
-  { icon: "⚡", text: "Switch Focus/Zen mode in Settings" },
-  { icon: "⎋", text: "Press Esc to exit immersive mode" },
+const ITEMS = [
+  { emoji: "📊", label: "Dashboard", desc: "Your life stats at a glance. Tap any section to expand." },
+  { emoji: "⬛", label: "Life Grid", desc: "Zoom & pan your entire life in Weeks, Months, or Years. Tap any cell to journal." },
+  { emoji: "📖", label: "Diary", desc: "Tap the mic button to voice-journal. Each entry lights up your grid." },
+  { emoji: "⚙️", label: "Settings", desc: "Set your birthdate, life expectancy, and AI key for horoscope + insights." },
+  { emoji: "🎙️", label: "Voice Journal", desc: "Hold the mic on any screen to capture a moment in under 10 seconds." },
+  { emoji: "✨", label: "Horoscope", desc: "Requires a Gemini API key (free at aistudio.google.com) added in Settings." },
 ];
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
   <AnimatePresence>
     {isOpen && (
       <motion.div
-        className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[1001] flex items-center justify-center p-4"
+        className="fixed inset-0 z-[1001] flex items-center justify-center bg-black/70 backdrop-blur-md"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
       >
         <motion.div
-          className="glass rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-primary/20"
+          className="bg-[#0d1b2e] border border-[#1e3a5f] rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <h2 className="text-xl font-bold text-primary text-center mb-6">How to Use the Grid</h2>
-          <ul className="space-y-3">
-            {TIPS.map((tip) => (
-              <li key={tip.text} className="flex items-start gap-3 text-sm">
-                <span className="text-base shrink-0 mt-0.5">{tip.icon}</span>
-                <span className="text-white/80">{tip.text}</span>
+          <h2 className="text-white text-2xl font-bold mb-1">LifeForge Guide</h2>
+          <p className="text-[#4a9eff] text-sm mb-6">Your life, visualized.</p>
+
+          <ul className="space-y-4">
+            {ITEMS.map((item) => (
+              <li key={item.label} className="flex items-start gap-3">
+                <span className="text-xl mt-0.5 shrink-0">{item.emoji}</span>
+                <div>
+                  <span className="text-white font-semibold text-sm">{item.label}</span>
+                  <span className="text-white/50 text-sm"> — {item.desc}</span>
+                </div>
               </li>
             ))}
           </ul>
+
           <button
             onClick={onClose}
-            className="mt-6 w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-bg-dark font-semibold text-sm transition-colors"
+            className="mt-6 w-full bg-[#1e3a5f] text-white rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-[#2a5298] transition-colors"
           >
-            Got it
+            Close
           </button>
         </motion.div>
       </motion.div>

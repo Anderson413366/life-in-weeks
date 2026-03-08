@@ -73,9 +73,10 @@ Generate a ${period === "today" ? "daily" : period === "week" ? "weekly" : "year
       const parsed: HoroscopeResult = JSON.parse(text);
       setResult(parsed);
       setCache(cacheKey, parsed, period);
-    } catch (e) {
-      setError("Failed to generate horoscope");
-      console.error(e);
+    } catch (e: any) {
+      const msg = e?.message ?? String(e);
+      console.error("Horoscope error:", msg, e);
+      setError(msg.includes("API_KEY") || msg.includes("401") ? "Invalid API key. Check Settings → AI Configuration." : `Horoscope error: ${msg.slice(0, 80)}`);
     } finally {
       setLoading(false);
     }

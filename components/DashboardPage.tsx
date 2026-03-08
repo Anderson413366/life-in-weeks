@@ -218,11 +218,24 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       </motion.section>
 
       {/* ══ ALL DATA IN ACCORDIONS (closed by default) ═══════ */}
+      <div className="flex flex-col gap-2">
 
+      {/* 1 */}
       <AccordionSection title="Your Exact Age" icon="🕐">
         <ExactAgeTicker birthDate={birthDate} birthYear={birthYear} />
       </AccordionSection>
 
+      {/* 2 */}
+      <AccordionSection title="Birthday Countdown" icon="🎂">
+        <div className={`${GLASS} p-6 max-w-sm mx-auto text-center`}>
+          <div className="text-3xl mb-2">🎂</div>
+          <div className="text-4xl font-black text-white counter-digits">{birthday.daysUntil}</div>
+          <div className="text-[0.55rem] text-[#00d4ff] uppercase tracking-[0.2em] font-semibold mt-1">days until you turn {birthday.turningAge}</div>
+          <div className="text-[0.5rem] text-white/30 mt-1">{birthday.nextBirthdayDate}</div>
+        </div>
+      </AccordionSection>
+
+      {/* 3 */}
       <AccordionSection title="Born On Your Day" icon="🌟">
         {(() => {
           // Trigger fetch on first expand
@@ -263,15 +276,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         )}
       </AccordionSection>
 
-      <AccordionSection title="Birthday Countdown" icon="🎂">
-        <div className={`${GLASS} p-6 max-w-sm mx-auto text-center`}>
-          <div className="text-3xl mb-2">🎂</div>
-          <div className="text-4xl font-black text-white counter-digits">{birthday.daysUntil}</div>
-          <div className="text-[0.55rem] text-[#00d4ff] uppercase tracking-[0.2em] font-semibold mt-1">days until you turn {birthday.turningAge}</div>
-          <div className="text-[0.5rem] text-white/30 mt-1">{birthday.nextBirthdayDate}</div>
-        </div>
-      </AccordionSection>
-
+      {/* 4 */}
       <AccordionSection title={isLowMood ? "Look How Far You've Come" : "Life at a Glance"} icon="📊">
         <div className="grid grid-cols-2 gap-3">
           <Stat value={lifeStats.daysPassed} label="Days Lived" />
@@ -292,6 +297,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </AccordionSection>
 
+      {/* 6 */}
+      <AccordionSection title="Waking Life" icon="☀️">
+        <div className="grid grid-cols-2 gap-3">
+          <Stat value={dynamicStats.wakingHoursLived} label="Waking Hours Lived" live />
+          <Stat value={dynamicStats.wakingHoursRemaining} label="Waking Hours Rem." live />
+        </div>
+      </AccordionSection>
+
+      {/* 7 */}
       <AccordionSection title="Body & Biology" icon="💓">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <DataRow icon="💓" value={biology.heartbeats} label="Heartbeats" sub={`~${bpm} bpm`} />
@@ -314,6 +328,36 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </AccordionSection>
 
+      {/* 9 */}
+      <AccordionSection title="Life in Numbers" icon="😄">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <DataRow icon="💬" value={numbers.wordsSpoken} label="Words Spoken" sub={`~${averages.avg_words_per_day.toLocaleString()}/day`} />
+          <DataRow icon="💭" value={numbers.dreamsHad} label="Dreams Had" sub="~4/night" />
+          <DataRow icon="📱" value={`${timeSpent.screenTimeYears} yrs`} label="Screen Time" sub={`~${averages.avg_screen_hours} hrs/day`} />
+          <DataRow icon="🍳" value={`${timeSpent.eatingMonths} mo`} label="Time Eating" />
+          <DataRow icon="🚶" value={numbers.stepsTaken} label="Steps Taken" sub={`~${averages.avg_steps_per_day.toLocaleString()}/day`} />
+        </div>
+      </AccordionSection>
+
+      {/* 10 */}
+      <AccordionSection title="Current Rhythms" icon="📈">
+        <div className="flex flex-col gap-3">
+          <ProgressBar label="Today" value={dynamicStats.percentDayPassed} color="bg-[#0891b2]" index={0} />
+          <ProgressBar label="This Month" value={dynamicStats.percentMonthPassed} color="bg-[#ec4899]" index={1} />
+          <ProgressBar label="This Year" value={dynamicStats.percentYearPassed} color="bg-[#4caf50]" index={2} />
+        </div>
+      </AccordionSection>
+
+      {/* 11 */}
+      <AccordionSection title="Life Milestones" icon="🏁">
+        <MilestoneTimeline milestones={[
+          { title: "Quarter Life", date: lifeStats.milestones.quarter, color: "#4CAF50" },
+          { title: "Halfway Point", date: lifeStats.milestones.halfway, color: "#2196F3" },
+          { title: "Three-Quarter Mark", date: lifeStats.milestones.threeQuarter, color: "#9C27B0" },
+        ]} />
+      </AccordionSection>
+
+      {/* 12 */}
       <AccordionSection title="Cosmic Perspective" icon="🌍">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <DataRow icon="🌍" value={cosmic.orbitsAroundSun} label="Orbits Around the Sun" />
@@ -321,19 +365,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           <DataRow icon="🌕" value={cosmic.fullMoons} label="Full Moons" />
           <DataRow icon="🌅" value={cosmic.sunrises} label="Sunrises" />
           <DataRow icon="🍂" value={cosmic.seasonsExperienced} label="Seasons" />
-          <DataRow icon="🚶" value={numbers.stepsTaken} label="Steps Taken" sub={`~${averages.avg_steps_per_day.toLocaleString()}/day`} />
         </div>
       </AccordionSection>
 
-      <AccordionSection title="Life in Numbers" icon="📊">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <DataRow icon="💬" value={numbers.wordsSpoken} label="Words Spoken" sub={`~${averages.avg_words_per_day.toLocaleString()}/day`} />
-          <DataRow icon="💭" value={numbers.dreamsHad} label="Dreams Had" sub="~4/night" />
-          <DataRow icon="📱" value={`${timeSpent.screenTimeYears} yrs`} label="Screen Time" sub={`~${averages.avg_screen_hours} hrs/day`} />
-          <DataRow icon="🍳" value={`${timeSpent.eatingMonths} mo`} label="Time Eating" />
-        </div>
-      </AccordionSection>
-
+      {/* 13 */}
       <AccordionSection title="Your Age on Other Planets" icon="🪐">
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {[
@@ -351,29 +386,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
           ))}
         </div>
-      </AccordionSection>
-
-      <AccordionSection title="Waking Life" icon="☀️">
-        <div className="grid grid-cols-2 gap-3">
-          <Stat value={dynamicStats.wakingHoursLived} label="Waking Hours Lived" live />
-          <Stat value={dynamicStats.wakingHoursRemaining} label="Waking Hours Rem." live />
-        </div>
-      </AccordionSection>
-
-      <AccordionSection title="Current Rhythms" icon="📈">
-        <div className="flex flex-col gap-3">
-          <ProgressBar label="Today" value={dynamicStats.percentDayPassed} color="bg-[#0891b2]" index={0} />
-          <ProgressBar label="This Month" value={dynamicStats.percentMonthPassed} color="bg-[#ec4899]" index={1} />
-          <ProgressBar label="This Year" value={dynamicStats.percentYearPassed} color="bg-[#4caf50]" index={2} />
-        </div>
-      </AccordionSection>
-
-      <AccordionSection title="Life Milestones" icon="🏁">
-        <MilestoneTimeline milestones={[
-          { title: "Quarter Life", date: lifeStats.milestones.quarter, color: "#4CAF50" },
-          { title: "Halfway Point", date: lifeStats.milestones.halfway, color: "#2196F3" },
-          { title: "Three-Quarter Mark", date: lifeStats.milestones.threeQuarter, color: "#9C27B0" },
-        ]} />
       </AccordionSection>
 
       <AccordionSection title={`Your ${zodiac?.name ?? ""} Horoscope`} icon="✨">
@@ -433,6 +445,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           )}
         </div>
       </AccordionSection>
+
+      </div>{/* end accordion gap-2 wrapper */}
 
       <LegacySnapshot isOpen={showSnapshot} onClose={() => setShowSnapshot(false)}
         lifeStats={lifeStats} birthYear={birthYear} birthMonth={birthMonth} birthDay={birthDay}
