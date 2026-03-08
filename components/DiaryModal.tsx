@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SelectedWeek } from "../types";
 import { generateReflectionPrompts, analyzeDiaryEntry, hasApiKey } from "../lib/ai";
 import { getOnThisDay } from "../lib/onThisDay";
+import { uploadPhoto } from "../lib/storage";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 
 interface DiaryModalProps {
@@ -10,7 +11,9 @@ interface DiaryModalProps {
   onClose: () => void;
   selectedWeek: SelectedWeek | null;
   initialEntryText: string;
-  onSave: (weekIndex: number, content: string) => Promise<void>;
+  initialPhotos?: string[];
+  userId?: string;
+  onSave: (weekIndex: number, content: string, photos?: string[]) => Promise<void>;
 }
 
 const PROMPTS = [
@@ -21,12 +24,16 @@ const PROMPTS = [
   { icon: "❤️", label: "Highlight", prompt: "What was the highlight of your week?" },
 ];
 
-const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, initialEntryText, onSave }) => {
+const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, initialEntryText, initialPhotos, userId, onSave }) => {
   const [entryText, setEntryText] = useState(initialEntryText);
+  const [photos, setPhotos] = useState<string[]>(initialPhotos ?? []);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [aiResponse, setAiResponse] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [activeTab, setActiveTab] = useState<"write" | "ai">("write");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const speech = useSpeechToText(useCallback((text: string) => {
     setEntryText((prev) => prev ? prev + " " + text : text);
@@ -34,26 +41,23 @@ const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, 
 
   const onThisDay = useMemo(() => {
     if (!selectedWeek) return null;
-    const parts = selectedWeek.date.split(" ");
     const monthNames: Record<string, number> = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
-    const month = monthNames[parts[0]] ?? 1;
-    const day = parseInt(parts[1], 10) || 1;
-    return getOnThisDay(month, day);
+    const parts = selectedWeek.date.split(" ");
+    return getOnThisDay(monthNames[parts[0]] ?? 1, parseInt(parts[1], 10) || 1);
   }, [selectedWeek]);
 
   useEffect(() => {
     if (isOpen) {
       setEntryText(initialEntryText);
+      setPhotos(initialPhotos ?? []);
+      setPendingFiles([]);
       setAiResponse("");
       setAiError("");
       setActiveTab("write");
     }
-  }, [isOpen, initialEntryText]);
+  }, [isOpen, initialEntryText, initialPhotos]);
 
-  const handleEscape = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-  }, [onClose]);
-
+  const handleEscape = useCallback((e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }, [onClose]);
   useEffect(() => {
     if (isOpen) document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
@@ -61,31 +65,56 @@ const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, 
 
   if (!selectedWeek) return null;
 
-  async function handleAiAction() {
-    setAiLoading(true);
-    setAiResponse("");
-    setAiError("");
-    try {
-      const result = entryText.trim() === ""
-        ? await generateReflectionPrompts(selectedWeek!.date)
-        : await analyzeDiaryEntry(entryText);
-      setAiResponse(result);
-      setActiveTab("ai");
-    } catch (err) {
-      setAiError(err instanceof Error ? err.message : "AI error");
-    } finally {
-      setAiLoading(false);
-    }
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    setPendingFiles((prev) => [...prev, ...files]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removePendingFile(index: number) {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function removeExistingPhoto(index: number) {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSave() {
-    await onSave(selectedWeek!.index, entryText);
-    onClose();
+    if (!userId) { await onSave(selectedWeek!.index, entryText, photos); onClose(); return; }
+
+    setUploading(true);
+    try {
+      // Upload pending files
+      const newUrls: string[] = [];
+      for (const file of pendingFiles) {
+        const url = await uploadPhoto(userId, file);
+        newUrls.push(url);
+      }
+      const allPhotos = [...photos, ...newUrls];
+      await onSave(selectedWeek!.index, entryText, allPhotos);
+      onClose();
+    } catch (err) {
+      console.error("Upload error:", err);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleAiAction() {
+    setAiLoading(true); setAiResponse(""); setAiError("");
+    try {
+      const result = entryText.trim() === "" ? await generateReflectionPrompts(selectedWeek!.date) : await analyzeDiaryEntry(entryText);
+      setAiResponse(result);
+      setActiveTab("ai");
+    } catch (err) { setAiError(err instanceof Error ? err.message : "AI error"); }
+    finally { setAiLoading(false); }
   }
 
   function insertPrompt(prompt: string) {
     setEntryText((prev) => prev ? prev + "\n\n" + prompt + "\n" : prompt + "\n");
   }
+
+  const totalPhotos = photos.length + pendingFiles.length;
 
   return (
     <AnimatePresence>
@@ -112,7 +141,6 @@ const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, 
               </div>
               <p className="text-xs text-text-muted">{selectedWeek.date}</p>
 
-              {/* On this day */}
               {onThisDay && (
                 <div className="mt-3 p-3 rounded-lg bg-[rgba(255,215,0,0.05)] border border-[#ffd700]/15">
                   {onThisDay.fact && (
@@ -124,7 +152,6 @@ const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, 
                 </div>
               )}
 
-              {/* Tabs */}
               <div className="flex gap-1 mt-3 p-0.5 bg-[rgba(255,255,255,0.03)] rounded-lg">
                 {(["write", "ai"] as const).map((tab) => (
                   <button
@@ -143,51 +170,74 @@ const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, 
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 pt-3">
               {activeTab === "write" ? (
                 <>
-                  {/* Quick prompts */}
                   {!entryText.trim() && (
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {PROMPTS.map((p) => (
-                        <button
-                          key={p.label}
-                          onClick={() => insertPrompt(p.prompt)}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[0.65rem] glass border border-box-border/50 text-text-muted hover:text-white hover:border-primary/30 transition-all"
-                        >
+                        <button key={p.label} onClick={() => insertPrompt(p.prompt)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[0.65rem] glass border border-box-border/50 text-text-muted hover:text-white hover:border-primary/30 transition-all">
                           <span>{p.icon}</span> {p.label}
                         </button>
                       ))}
                     </div>
                   )}
 
-                  {/* Text area with voice button */}
                   <div className="relative">
                     <textarea
-                      className="w-full min-h-[160px] max-h-[300px] p-3 pr-12 bg-[rgba(255,255,255,0.03)] border border-box-border rounded-lg text-white resize-y text-sm leading-relaxed focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                      className="w-full min-h-[140px] max-h-[260px] p-3 pr-12 bg-[rgba(255,255,255,0.03)] border border-box-border rounded-lg text-white resize-y text-sm leading-relaxed focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                       value={entryText}
                       onChange={(e) => setEntryText(e.target.value)}
-                      placeholder="Start writing about your week... or tap a prompt above to get started."
+                      placeholder="Start writing about your week..."
                       autoFocus
                     />
-                    {/* Voice button */}
                     {speech.isSupported && (
                       <button
                         onClick={speech.isListening ? speech.stop : speech.start}
                         className={`absolute right-2 top-2 w-9 h-9 rounded-full flex items-center justify-center transition-all
-                          ${speech.isListening
-                            ? "bg-accent text-white animate-pulse shadow-lg shadow-accent/40"
-                            : "bg-[rgba(255,255,255,0.05)] text-text-muted hover:text-white hover:bg-[rgba(255,255,255,0.1)]"
-                          }`}
+                          ${speech.isListening ? "bg-accent text-white animate-pulse shadow-lg shadow-accent/40" : "bg-[rgba(255,255,255,0.05)] text-text-muted hover:text-white hover:bg-[rgba(255,255,255,0.1)]"}`}
                         title={speech.isListening ? "Stop recording" : "Voice input"}
                       >
                         {speech.isListening ? "⏹" : "🎙"}
                       </button>
                     )}
                   </div>
-                  {speech.isListening && (
-                    <div className="text-xs text-accent mt-1 animate-pulse">Listening... speak now</div>
-                  )}
+                  {speech.isListening && <div className="text-xs text-accent mt-1 animate-pulse">Listening...</div>}
+
+                  {/* Photo section */}
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs glass border border-box-border/50 text-text-muted hover:text-white hover:border-primary/30 transition-all"
+                      >
+                        📷 Add Photos
+                      </button>
+                      {totalPhotos > 0 && <span className="text-[0.6rem] text-text-muted/50">{totalPhotos} photo{totalPhotos !== 1 ? "s" : ""}</span>}
+                      <input ref={fileInputRef} type="file" accept="image/*" multiple capture="environment" className="hidden" onChange={handleFileSelect} />
+                    </div>
+
+                    {/* Photo previews */}
+                    {(photos.length > 0 || pendingFiles.length > 0) && (
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {photos.map((url, i) => (
+                          <div key={`existing-${i}`} className="relative shrink-0 group">
+                            <img src={url} alt="" className="w-20 h-20 rounded-lg object-cover border border-box-border" />
+                            <button onClick={() => removeExistingPhoto(i)}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                          </div>
+                        ))}
+                        {pendingFiles.map((file, i) => (
+                          <div key={`pending-${i}`} className="relative shrink-0 group">
+                            <img src={URL.createObjectURL(file)} alt="" className="w-20 h-20 rounded-lg object-cover border border-primary/30" />
+                            <button onClick={() => removePendingFile(i)}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                            <div className="absolute bottom-0.5 right-0.5 text-[0.5rem] bg-primary/80 text-bg-dark px-1 rounded">new</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
-                /* AI tab */
                 <div className="min-h-[160px]">
                   {aiLoading && (
                     <div className="flex items-center justify-center text-primary text-sm py-8">
@@ -200,22 +250,16 @@ const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, 
                   )}
                   {aiError && <div className="text-accent text-sm p-3">{aiError}</div>}
                   {aiResponse && !aiLoading && (
-                    <div
-                      className="text-sm text-text-muted whitespace-pre-wrap leading-relaxed"
+                    <div className="text-sm text-text-muted whitespace-pre-wrap leading-relaxed"
                       dangerouslySetInnerHTML={{
-                        __html: aiResponse
-                          .replace(/\n/g, "<br/>")
-                          .replace(/\*\*(.*?)\*\*/g, "<strong class='text-primary'>$1</strong>")
-                          .replace(/\*(.*?)\*/g, "<em>$1</em>"),
+                        __html: aiResponse.replace(/\n/g, "<br/>").replace(/\*\*(.*?)\*\*/g, "<strong class='text-primary'>$1</strong>").replace(/\*(.*?)\*/g, "<em>$1</em>"),
                       }}
                     />
                   )}
                   {!aiLoading && !aiResponse && !aiError && (
                     <div className="text-center py-8">
                       <p className="text-sm text-text-muted/70">
-                        {hasApiKey()
-                          ? entryText.trim() ? "Get AI analysis of your entry" : "Get AI-powered reflection prompts"
-                          : "Add your Gemini API key in Settings to enable AI"}
+                        {hasApiKey() ? (entryText.trim() ? "Get AI analysis of your entry" : "Get AI-powered reflection prompts") : "Add your Gemini API key in Settings to enable AI"}
                       </p>
                     </div>
                   )}
@@ -225,19 +269,15 @@ const DiaryModal: React.FC<DiaryModalProps> = ({ isOpen, onClose, selectedWeek, 
 
             {/* Footer */}
             <div className="p-4 sm:p-5 pt-3 border-t border-box-border/30 flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-2">
-              <button
-                onClick={handleAiAction}
-                disabled={aiLoading || !hasApiKey()}
-                className="w-full sm:w-auto bg-gemini-button-bg hover:bg-gemini-button-hover-bg text-white py-2 px-4 rounded-lg text-xs font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-              >
+              <button onClick={handleAiAction} disabled={aiLoading || !hasApiKey()}
+                className="w-full sm:w-auto bg-gemini-button-bg hover:bg-gemini-button-hover-bg text-white py-2 px-4 rounded-lg text-xs font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
                 ✨ {entryText.trim() ? "Analyze" : "Get Prompts"}
               </button>
               <div className="flex gap-2 w-full sm:w-auto">
-                <button onClick={onClose} className="flex-1 sm:flex-initial py-2 px-4 rounded-lg bg-[rgba(255,255,255,0.06)] text-text-muted hover:text-white text-xs font-medium transition-colors">
-                  Cancel
-                </button>
-                <button onClick={handleSave} className="flex-1 sm:flex-initial py-2 px-5 rounded-lg bg-primary hover:bg-primary-dark text-bg-dark text-xs font-semibold transition-colors">
-                  Save
+                <button onClick={onClose} className="flex-1 sm:flex-initial py-2 px-4 rounded-lg bg-[rgba(255,255,255,0.06)] text-text-muted hover:text-white text-xs font-medium transition-colors">Cancel</button>
+                <button onClick={handleSave} disabled={uploading}
+                  className="flex-1 sm:flex-initial py-2 px-5 rounded-lg bg-primary hover:bg-primary-dark text-bg-dark text-xs font-semibold transition-colors disabled:opacity-50">
+                  {uploading ? "Uploading..." : "Save"}
                 </button>
               </div>
             </div>

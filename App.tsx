@@ -78,7 +78,7 @@ const App: React.FC = () => {
               fullEntries={fullEntries}
               diaryEntries={diaryEntries}
               birthdate={profile.birthdate}
-              weeksPassed={lifeStats?.weeksPassed ?? 0}
+              userId={user?.id}
               onSave={saveEntry}
             />
           ) : page === "grid" && hasBirthdate ? (
@@ -88,6 +88,7 @@ const App: React.FC = () => {
               birthdate={profile.birthdate}
               lifeExpectancy={profile.lifeExpectancy}
               diaryEntries={diaryEntries}
+              userId={user?.id}
               onSaveDiary={saveEntry}
             />
           ) : hasBirthdate ? (

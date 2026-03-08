@@ -41,10 +41,13 @@ const MoodChecker: React.FC<MoodCheckerProps> = ({ todayMood, recentMoods, onSav
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-xl">🧠</span>
-          <h3 className="text-sm font-semibold text-white">How are you feeling today?</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-white">How are you feeling right now?</h3>
+            <p className="text-[0.55rem] text-text-muted/50">Resets every 3 hours for a fresh check-in</p>
+          </div>
         </div>
         {todayMood && !expanded && (
-          <button onClick={() => setExpanded(true)} className="text-xs text-primary hover:underline">Edit</button>
+          <button onClick={() => setExpanded(true)} className="text-xs text-primary hover:underline">Update</button>
         )}
       </div>
 

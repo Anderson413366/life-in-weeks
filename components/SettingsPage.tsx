@@ -101,19 +101,22 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         <SectionHeading title="Profile" />
         <div className="glass rounded-xl p-5 sm:p-6 flex flex-col gap-4">
           {/* Avatar */}
-          <div className="flex items-center gap-4 mb-2">
-            <label className="cursor-pointer group relative">
+          <div className="flex items-center gap-4 mb-2 p-3 rounded-lg bg-[rgba(255,255,255,0.02)] border border-box-border/30">
+            <label className="cursor-pointer group relative shrink-0">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-2 border-box-border group-hover:border-primary transition-colors" />
+                <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-box-border group-hover:border-primary transition-colors" />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-box-border group-hover:border-primary transition-colors flex items-center justify-center text-2xl text-primary">
+                <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-dashed border-box-border group-hover:border-primary transition-colors flex items-center justify-center text-3xl text-primary">
                   {(preferredName || displayName || "?")[0]?.toUpperCase()}
                 </div>
               )}
-              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">📷</div>
-              <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onAvatarChange(f); }} />
+              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-sm font-medium">📷 Upload</div>
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { onAvatarChange(f); flash("Profile photo updated"); } }} />
             </label>
-            <div className="text-xs text-text-muted">Click to upload a profile photo</div>
+            <div>
+              <div className="text-sm text-white font-medium mb-1">Profile Photo</div>
+              <div className="text-xs text-text-muted">Click the circle to upload. Supports JPG, PNG.</div>
+            </div>
           </div>
           <FieldRow label="Full Name">
             <input

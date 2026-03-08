@@ -14,10 +14,11 @@ interface GridPageProps {
   birthdate: string;
   lifeExpectancy: number;
   diaryEntries: DiaryMap;
-  onSaveDiary: (weekIndex: number, content: string) => Promise<void>;
+  userId?: string;
+  onSaveDiary: (weekIndex: number, content: string, photos?: string[]) => Promise<void>;
 }
 
-const GridPage: React.FC<GridPageProps> = ({ lifeStats, birthdate, lifeExpectancy, diaryEntries, onSaveDiary }) => {
+const GridPage: React.FC<GridPageProps> = ({ lifeStats, birthdate, lifeExpectancy, diaryEntries, userId, onSaveDiary }) => {
   const [scale, setScale] = useState(1);
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek | null>(null);
@@ -123,7 +124,7 @@ const GridPage: React.FC<GridPageProps> = ({ lifeStats, birthdate, lifeExpectanc
       </div>
 
       <Tooltip hoverInfo={hoverInfo} />
-      <DiaryModal isOpen={isModalOpen} onClose={closeDiary} selectedWeek={selectedWeek} initialEntryText={currentEntry} onSave={onSaveDiary} />
+      <DiaryModal isOpen={isModalOpen} onClose={closeDiary} selectedWeek={selectedWeek} initialEntryText={currentEntry} userId={userId} onSave={onSaveDiary} />
       <DiaryList isOpen={isListOpen} onClose={() => setIsListOpen(false)} diaryEntries={diaryEntries} birthdate={birthdate} onEdit={openDiaryForWeek} onDelete={handleDelete} />
     </motion.div>
   );
