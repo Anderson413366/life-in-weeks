@@ -14,163 +14,197 @@ interface ResonanceCanvasProps {
   onWeekSelect: (weekIndex: number, row: number, col: number) => void;
 }
 
+// ── Layout constants ─────────────────────────────────────────
 const COLS = 52;
-const BASE_CELL = 16;
-const GAP = 2;
-const LABEL_W = 30;
-const HEADER_H = 20;
+const BASE_CELL = 12;
+const BASE_GAP = 4;
+const LABEL_W = 28;
+const HEADER_H = 18;
+
+// ── Color palette ────────────────────────────────────────────
+const ZEN = {
+  lived: "#0891b2",
+  current: "#ec4899",
+  currentGlow: "rgba(236, 72, 153, 0.6)",
+  future: "rgba(255, 255, 255, 0.08)",
+  futureBorder: "rgba(255, 255, 255, 0.04)",
+  diary: "#fbbf24",
+  bg: "#080818",
+  label: "rgba(0, 212, 255, 0.5)",
+  labelBright: "rgba(0, 212, 255, 0.8)",
+  decade: "rgba(0, 212, 255, 0.06)",
+  header: "rgba(0, 212, 255, 0.4)",
+};
+
+const FOCUS = {
+  lived: "#ffffff",
+  current: "#ffffff",
+  currentGlow: "rgba(255, 255, 255, 0.4)",
+  future: "rgba(255, 255, 255, 0.05)",
+  futureBorder: "rgba(255, 255, 255, 0.03)",
+  diary: "#ffffff",
+  bg: "#000000",
+  label: "rgba(255, 255, 255, 0.3)",
+  labelBright: "rgba(255, 255, 255, 0.6)",
+  decade: "rgba(255, 255, 255, 0.06)",
+  header: "rgba(255, 255, 255, 0.25)",
+};
 
 const ResonanceCanvas: React.FC<ResonanceCanvasProps> = ({
   weeksPassed, totalYears, diaryEntries, zoom, offsetX, offsetY, mode, hudVisible, onWeekSelect,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number>(0);
-  const sizeRef = useRef({ w: 0, h: 0 });
+  const rafRef = useRef(0);
 
+  // Store latest props in refs so the RAF loop always reads fresh values
+  // without needing to recreate the draw function on every prop change.
+  const propsRef = useRef({ weeksPassed, totalYears, diaryEntries, zoom, offsetX, offsetY, mode, hudVisible });
+  propsRef.current = { weeksPassed, totalYears, diaryEntries, zoom, offsetX, offsetY, mode, hudVisible };
+
+  // Cached canvas size to avoid expensive resize every frame
+  const sizeRef = useRef({ w: 0, h: 0, dpr: 1 });
+
+  // ── Main draw function (called 60× per second) ────────────
   const draw = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
 
-    // Only resize canvas when container size actually changes
+    const p = propsRef.current;
     const dpr = window.devicePixelRatio || 1;
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
-    if (sizeRef.current.w !== w || sizeRef.current.h !== h) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      sizeRef.current = { w, h };
+
+    // Resize canvas buffer only when dimensions change
+    if (sizeRef.current.w !== w || sizeRef.current.h !== h || sizeRef.current.dpr !== dpr) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      sizeRef.current = { w, h, dpr };
     }
+
+    // Reset transform and scale for retina
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    const C = p.mode === "focus" ? FOCUS : ZEN;
     const t = time / 1000;
-    const isFocus = mode === "focus";
-    const cell = BASE_CELL * zoom;
-    const gap = GAP * zoom;
+    const z = p.zoom;
+    const cell = BASE_CELL * z;
+    const gap = BASE_GAP * z;
     const step = cell + gap;
-    const labelW = LABEL_W * zoom;
-    const headerH = HEADER_H * zoom;
+    const labelW = LABEL_W * z;
+    const headerH = HEADER_H * z;
 
-    // ── Background (flat fill — no gradient per frame) ──────
-    ctx.fillStyle = isFocus ? "#000000" : "#080818";
+    // ── Clear ───────────────────────────────────────────────
+    ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, w, h);
 
+    // ── Viewport culling bounds (in grid space) ─────────────
+    const vl = -p.offsetX;
+    const vr = vl + w;
+    const vt = -p.offsetY;
+    const vb = vt + h;
+
     ctx.save();
-    ctx.translate(offsetX, offsetY);
+    ctx.translate(p.offsetX, p.offsetY);
 
-    // ── Breathing pulse (subtle) ────────────────────────────
-    const breathe = isFocus ? 1 : 0.92 + 0.08 * Math.sin(t * 0.8);
-
-    // ── Viewport culling bounds ─────────────────────────────
-    const viewLeft = -offsetX - step;
-    const viewRight = -offsetX + w + step;
-    const viewTop = -offsetY - step;
-    const viewBottom = -offsetY + h + step;
-
-    // ── HUD: Week header numbers ────────────────────────────
-    if (hudVisible && zoom > 0.5) {
-      const fontSize = Math.max(7, Math.min(12, 9 * zoom));
-      ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+    // ── Week number headers ─────────────────────────────────
+    if (p.hudVisible && z > 0.4) {
+      const fs = Math.max(6, Math.min(11, 8 * z));
+      ctx.font = `600 ${fs}px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = isFocus ? "#666" : "#00d4ff80";
+      ctx.fillStyle = C.header;
 
       for (let c = 0; c < COLS; c++) {
         const cx = labelW + c * step + cell / 2;
-        if (cx < viewLeft || cx > viewRight) continue;
+        if (cx < vl - step || cx > vr + step) continue;
         ctx.fillText(`${c + 1}`, cx, headerH / 2);
       }
     }
 
-    // ── Grid rows ───────────────────────────────────────────
-    for (let row = 0; row < totalYears; row++) {
-      const y = headerH + row * step;
+    // ── Rows ────────────────────────────────────────────────
+    for (let row = 0; row < p.totalYears; row++) {
+      const ry = headerH + row * step;
 
-      // Row-level culling
-      if (y > viewBottom || y + cell < viewTop) continue;
+      // Row-level cull
+      if (ry > vb + step) break; // rows below viewport — stop entirely
+      if (ry + cell < vt - step) continue; // row above viewport — skip
 
       // Year label
-      if (hudVisible && zoom > 0.5) {
-        const fontSize = Math.max(7, Math.min(12, 9 * zoom));
-        ctx.font = `600 ${fontSize}px system-ui, -apple-system, sans-serif`;
+      if (p.hudVisible && z > 0.4) {
+        const fs = Math.max(6, Math.min(11, 8 * z));
+        ctx.font = `600 ${fs}px system-ui, -apple-system, sans-serif`;
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = isFocus ? (row % 10 === 0 ? "#aaa" : "#555") : (row % 10 === 0 ? "#00d4ff" : "#00d4ff60");
-        ctx.fillText(`${row}`, labelW - 4 * zoom, y + cell / 2);
+        ctx.fillStyle = row % 10 === 0 ? C.labelBright : C.label;
+        ctx.fillText(`${row}`, labelW - 3 * z, ry + cell / 2);
       }
 
-      // Decade line
+      // Decade separator
       if (row > 0 && row % 10 === 0) {
-        ctx.fillStyle = isFocus ? "#222" : "rgba(0,212,255,0.06)";
-        ctx.fillRect(labelW, y - gap / 2, COLS * step, 1);
+        ctx.fillStyle = C.decade;
+        ctx.fillRect(labelW, ry - gap / 2, COLS * step - gap, Math.max(1, 0.5 * z));
       }
 
+      // ── Cells ─────────────────────────────────────────────
       for (let col = 0; col < COLS; col++) {
-        const x = labelW + col * step;
+        const cx = labelW + col * step;
 
-        // Cell-level culling
-        if (x > viewRight || x + cell < viewLeft) continue;
+        // Column-level cull
+        if (cx > vr + step) break;
+        if (cx + cell < vl - step) continue;
 
         const idx = row * COLS + col;
-        const isPast = idx < weeksPassed;
-        const isCurrent = idx === weeksPassed;
-        const hasDiary = !!diaryEntries[idx.toString()];
+        const isPast = idx < p.weeksPassed;
+        const isCurrent = idx === p.weeksPassed;
+        const hasDiary = !!p.diaryEntries[idx.toString()];
 
-        ctx.shadowBlur = 0;
+        // Reset per-cell state
         ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
 
         if (isCurrent) {
-          // ── Current week: bright ember ─────────────────────
-          const pulse = isFocus ? 1 : 0.7 + 0.3 * Math.sin(t * 2.5);
+          // ── Current week: glowing ember ─────────────────
+          const pulse = p.mode === "focus" ? 1 : 0.7 + 0.3 * Math.sin(t * 2.8);
 
-          if (!isFocus) {
-            ctx.shadowColor = "#ff6b6b";
-            ctx.shadowBlur = 10 * zoom;
+          if (p.mode !== "focus") {
+            ctx.shadowColor = C.currentGlow;
+            ctx.shadowBlur = 12 * z;
           }
+
           ctx.globalAlpha = pulse;
-          ctx.fillStyle = isFocus ? "#ffffff" : "#ff6b6b";
+          ctx.fillStyle = C.current;
           ctx.beginPath();
-          ctx.roundRect(x, y, cell, cell, 2);
+          ctx.roundRect(cx, ry, cell, cell, Math.max(1, 2 * z));
           ctx.fill();
+
           ctx.shadowBlur = 0;
           ctx.globalAlpha = 1;
         } else if (isPast) {
-          // ── Lived weeks: CRISP, high-contrast ─────────────
-          // Recency = brighter. No foggy alphas.
-          const recency = idx / (weeksPassed || 1);
-
-          if (isFocus) {
-            // Focus: clean white, slight gradient
-            ctx.fillStyle = `rgba(255,255,255,${0.4 + recency * 0.6})`;
-          } else {
-            // Zen: vivid cyan, no murky alpha
-            const r = Math.round(0 + recency * 60);
-            const g = Math.round(140 + recency * 80);
-            const b = Math.round(180 + recency * 75);
-            const a = (0.5 + recency * 0.5) * breathe;
-            ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-          }
+          // ── Lived weeks: solid, premium ─────────────────
+          ctx.fillStyle = C.lived;
           ctx.beginPath();
-          ctx.roundRect(x, y, cell, cell, 2);
+          ctx.roundRect(cx, ry, cell, cell, Math.max(1, 2 * z));
           ctx.fill();
         } else {
-          // ── Future: dark, clean ────────────────────────────
-          ctx.fillStyle = isFocus ? "#0c0c0c" : "#12122a";
+          // ── Future weeks: dim, minimal ──────────────────
+          ctx.fillStyle = C.future;
           ctx.beginPath();
-          ctx.roundRect(x, y, cell, cell, 2);
+          ctx.roundRect(cx, ry, cell, cell, Math.max(1, 2 * z));
           ctx.fill();
-          ctx.strokeStyle = isFocus ? "#1a1a1a" : "#1f1f40";
+
+          ctx.strokeStyle = C.futureBorder;
           ctx.lineWidth = 0.5;
           ctx.stroke();
         }
 
-        // Diary dot
+        // Diary marker
         if (hasDiary) {
-          const r = Math.max(1.5, 2.5 * zoom);
+          const dr = Math.max(1.5, 2 * z);
           ctx.beginPath();
-          ctx.arc(x + cell / 2, y + cell / 2, r, 0, Math.PI * 2);
-          ctx.fillStyle = isFocus ? "#fff" : "#ffd700";
+          ctx.arc(cx + cell / 2, ry + cell / 2, dr, 0, Math.PI * 2);
+          ctx.fillStyle = C.diary;
           ctx.globalAlpha = 0.9;
           ctx.fill();
           ctx.globalAlpha = 1;
@@ -179,40 +213,58 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = ({
     }
 
     ctx.restore();
-  }, [weeksPassed, totalYears, diaryEntries, zoom, offsetX, offsetY, mode, hudVisible]);
+  }, []); // Empty deps — reads everything from propsRef
 
+  // ── Animation loop ────────────────────────────────────────
   useEffect(() => {
-    let running = true;
+    let active = true;
     function loop(t: number) {
-      if (!running) return;
+      if (!active) return;
       draw(t);
       rafRef.current = requestAnimationFrame(loop);
     }
     rafRef.current = requestAnimationFrame(loop);
-    return () => { running = false; cancelAnimationFrame(rafRef.current); };
+    return () => {
+      active = false;
+      cancelAnimationFrame(rafRef.current);
+    };
   }, [draw]);
 
+  // ── Hit testing ───────────────────────────────────────────
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const p = propsRef.current;
     const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left - offsetX;
-    const my = e.clientY - rect.top - offsetY;
 
-    const cell = BASE_CELL * zoom;
-    const gap = GAP * zoom;
+    // Mouse position in canvas space, accounting for zoom + pan offset
+    const mx = e.clientX - rect.left - p.offsetX;
+    const my = e.clientY - rect.top - p.offsetY;
+
+    const z = p.zoom;
+    const cell = BASE_CELL * z;
+    const gap = BASE_GAP * z;
     const step = cell + gap;
-    const labelW = LABEL_W * zoom;
-    const headerH = HEADER_H * zoom;
+    const labelW = LABEL_W * z;
+    const headerH = HEADER_H * z;
 
+    // Reverse-calculate grid coordinates
     const col = Math.floor((mx - labelW) / step);
     const row = Math.floor((my - headerH) / step);
 
-    if (col >= 0 && col < COLS && row >= 0 && row < totalYears) {
-      const idx = row * COLS + col;
-      if (idx <= weeksPassed) onWeekSelect(idx, row, col);
+    // Verify within bounds and verify click is inside the cell (not the gap)
+    if (col < 0 || col >= COLS || row < 0 || row >= p.totalYears) return;
+
+    const cellX = labelW + col * step;
+    const cellY = headerH + row * step;
+    if (mx < cellX || mx > cellX + cell || my < cellY || my > cellY + cell) return;
+
+    const idx = row * COLS + col;
+    if (idx <= p.weeksPassed) {
+      onWeekSelect(idx, row, col);
     }
-  }, [zoom, offsetX, offsetY, totalYears, weeksPassed, onWeekSelect]);
+  }, [onWeekSelect]);
 
   return (
     <canvas
