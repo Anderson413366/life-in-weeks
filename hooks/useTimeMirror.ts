@@ -30,7 +30,7 @@ export async function generateDecadeImage(
   const prompt = `This is a photo of a real person currently around ${currentAge} years old. Transform this portrait to show exactly how this same person would look as ${ageDesc}. Preserve their exact facial bone structure, eye shape, nose shape, and unique features. Maintain the same skin tone and ethnicity. Age or de-age only: adjust skin texture, wrinkles, hair color/amount, face fullness appropriately. Photorealistic result, professional portrait photography style. Soft natural lighting, front-facing. Clean neutral background.`;
 
   // Try the image generation model first
-  const models = ["gemini-2.0-flash-exp", "gemini-2.0-flash"];
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash-exp"];
 
   for (const model of models) {
     try {

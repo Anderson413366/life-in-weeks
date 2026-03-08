@@ -71,7 +71,7 @@ const TimeMirrorPage: React.FC<TimeMirrorPageProps> = ({ birthYear, currentAge, 
     try {
       const ai = new GoogleGenAI({ apiKey: geminiApiKey });
       const resp = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: `Write a single beautiful, poetic, deeply moving sentence (max 40 words) about the miracle of a human face changing across ${decades.length} decades of life. Be philosophical and life-affirming. No clichés. No quotes.` }] }],
       });
       setAiReflection((resp.text ?? "").trim());

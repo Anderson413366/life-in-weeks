@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { AI_STORAGE_KEY } from "../constants";
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-2.5-flash";
 
 function getClient(): GoogleGenAI | null {
   const key = localStorage.getItem(AI_STORAGE_KEY);
