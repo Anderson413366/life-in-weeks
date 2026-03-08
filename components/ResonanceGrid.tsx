@@ -7,7 +7,7 @@ import type { LifeStats, DiaryMap, SelectedWeek, HoverInfo } from "../types";
 import type { AppMode } from "../lib/theme";
 import type { FullDiaryEntry } from "../hooks/useDiary";
 import type { MoodEntry } from "../hooks/useMood";
-import ResonanceCanvas, { type GridMode } from "./ResonanceCanvas";
+import ResonanceCanvas, { type GridMode, getGridColors } from "./ResonanceCanvas";
 import LifeBattery from "./LifeBattery";
 import WeekModal from "./WeekModal";
 import LegacySnapshot from "./LegacySnapshot";
@@ -41,26 +41,12 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   const hudTimerRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Compute initial offset to center the grid in the viewport
-  const initialZoom = 0.85;
-  const gridTotalW = 30 * initialZoom + 52 * (12 + 4) * initialZoom;
-  const currentRow = Math.floor(lifeStats.weeksPassed / 52);
-  const gridRowY = 18 * initialZoom + currentRow * (12 + 4) * initialZoom;
-
   const [{ zoom, x, y }, api] = useSpring(() => ({
-    zoom: initialZoom,
-    x: 0, // will be set on mount
-    y: -gridRowY + 200, // center current row near top third
+    zoom: 1,
+    x: 0,
+    y: 40, // start at y=40 so content is just below the switcher
     config: { mass: 0.8, tension: 200, friction: 28 },
   }));
-
-  // Center horizontally on mount
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const containerW = containerRef.current.clientWidth;
-    const centerX = (containerW - gridTotalW) / 2;
-    api.start({ x: Math.max(0, centerX), immediate: true });
-  }, []);
 
   const flashHud = useCallback(() => {
     setHudVisible(true);
@@ -125,16 +111,16 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
     <>
       <motion.div
         className={`${immersive ? "fixed inset-0 z-50" : "relative w-screen -ml-[calc((100vw-100%)/2)]"}`}
-        style={immersive ? undefined : { height: "calc(100vh - 120px)", minHeight: 400 }}
+        style={immersive ? undefined : { height: "calc(100vh - 64px)", minHeight: 400 }}
         layout
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        {/* Canvas container — full viewport width */}
+        {/* Canvas container — below switcher */}
         <div
           ref={containerRef}
           {...bind()}
-          className={`absolute inset-0 overflow-hidden ${isFocus ? "bg-black" : "bg-[#060614]"}`}
-          style={{ touchAction: "none" }}
+          className={`absolute left-0 right-0 bottom-0 overflow-hidden ${isFocus ? "bg-black" : "bg-[#080818]"}`}
+          style={{ touchAction: "none", top: "48px" }}
         >
           <ResonanceCanvas
             weeksPassed={lifeStats.weeksPassed}
@@ -155,7 +141,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
               {(["weeks", "months", "years"] as GridMode[]).map((m) => (
                 <button
                   key={m}
-                  onClick={() => { setGridMode(m); api.start({ zoom: 0.85, x: 0, y: 0 }); flashHud(); }}
+                  onClick={() => { setGridMode(m); api.start({ zoom: 1, x: 0, y: 40, immediate: true }); flashHud(); }}
                   className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all
                     ${gridMode === m
                       ? "bg-gradient-to-r from-cyan-500 to-pink-500 text-white shadow-lg"
@@ -166,6 +152,18 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
               ))}
             </div>
           </div>
+
+          {/* ── Legend (color-aware, always visible) ──────────── */}
+          {(() => {
+            const gc = getGridColors(gridMode);
+            return (
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4 text-[0.6rem] text-white/50">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: gc.lived }} />Lived</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: gc.current }} />Now</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border border-white/30 inline-block" />Future</span>
+              </div>
+            );
+          })()}
 
           {/* ── Top HUD (battery + info) ─────────────────────── */}
           <AnimatePresence>
@@ -194,7 +192,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium ${controlCls}`}>+</button>
             <button onClick={() => { api.start({ zoom: Math.max(0.3, zoom.get() - 0.5) }); flashHud(); }}
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium ${controlCls}`}>−</button>
-            <button onClick={() => { api.start({ zoom: 0.85, x: 0, y: 0 }); flashHud(); }}
+            <button onClick={() => { api.start({ zoom: 1, x: 0, y: 40 }); flashHud(); }}
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-[0.6rem] ${controlDimCls}`}>⟳</button>
           </div>
 

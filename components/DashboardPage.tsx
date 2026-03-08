@@ -8,6 +8,7 @@ import {
 import { getGeneration } from "../lib/generations";
 import { getZodiacSign } from "../lib/zodiac";
 import { useHoroscope } from "../hooks/useHoroscope";
+import { useFamousBirthdays } from "../hooks/useFamousBirthdays";
 
 import LifeBattery from "./LifeBattery";
 import ExactAgeTicker from "./ExactAgeTicker";
@@ -101,6 +102,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const bpm = averages.avg_heartbeats_per_min;
   const pulseDuration = 60 / bpm;
   const currentAge = Math.floor(lifeStats.daysPassed / 365.25);
+  const famousBirthdays = useFamousBirthdays(birthMonth, birthDay);
 
   const horoscope = useHoroscope(
     zodiac?.name ?? "Aries", zodiac?.element ?? "Fire",
@@ -219,6 +221,46 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
       <AccordionSection title="Your Exact Age" icon="🕐">
         <ExactAgeTicker birthDate={birthDate} birthYear={birthYear} />
+      </AccordionSection>
+
+      <AccordionSection title="Born On Your Day" icon="🌟">
+        {(() => {
+          // Trigger fetch on first expand
+          if (!famousBirthdays.people.length && !famousBirthdays.loading && !famousBirthdays.error) famousBirthdays.fetch();
+          return null;
+        })()}
+        {famousBirthdays.loading && (
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className={`${GLASS} min-w-[140px] max-w-[140px] p-4 animate-pulse`}>
+                <div className="w-8 h-8 bg-white/5 rounded-full mb-2" />
+                <div className="w-full h-3 bg-white/5 rounded mb-1" />
+                <div className="w-2/3 h-2 bg-white/5 rounded" />
+              </div>
+            ))}
+          </div>
+        )}
+        {famousBirthdays.error === "no-key" && (
+          <p className="text-sm text-white/30 text-center py-4">Add your AI key in Settings to see famous people born on your day.</p>
+        )}
+        {famousBirthdays.error && famousBirthdays.error !== "no-key" && (
+          <p className="text-sm text-red-400/60 text-center py-4">{famousBirthdays.error}</p>
+        )}
+        {famousBirthdays.people.length > 0 && (
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
+            {famousBirthdays.people.map((p) => (
+              <div key={p.name} className={`${GLASS} min-w-[140px] max-w-[140px] p-4 shrink-0`}>
+                <div className="text-3xl mb-2">{p.emoji}</div>
+                <div className="text-white font-bold text-sm leading-tight">{p.name}</div>
+                <div className="mt-1">
+                  <span className="bg-white/10 text-white/60 text-[0.5rem] uppercase tracking-wide rounded-full px-2 py-0.5">{p.field}</span>
+                </div>
+                <div className="text-white/30 text-[0.55rem] mt-1">{p.born} – {p.died ?? "alive"}</div>
+                <div className="text-white/50 text-[0.6rem] leading-snug mt-1">{p.tagline}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </AccordionSection>
 
       <AccordionSection title="Birthday Countdown" icon="🎂">
