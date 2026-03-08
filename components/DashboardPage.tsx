@@ -7,6 +7,7 @@ import {
 } from "../lib/lifeData";
 import { getGeneration } from "../lib/generations";
 import { getZodiacSign } from "../lib/zodiac";
+import { useHoroscope } from "../hooks/useHoroscope";
 
 import LifeBattery from "./LifeBattery";
 import ExactAgeTicker from "./ExactAgeTicker";
@@ -99,6 +100,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const chinese = getChineseZodiac(birthYear);
   const bpm = averages.avg_heartbeats_per_min;
   const pulseDuration = 60 / bpm;
+  const currentAge = Math.floor(lifeStats.daysPassed / 365.25);
+
+  const horoscope = useHoroscope(
+    zodiac?.name ?? "Aries", zodiac?.element ?? "Fire",
+    birthMonth, birthDay, birthYear, currentAge, lifeStats.percentageLived,
+  );
 
   return (
     <motion.div
@@ -254,6 +261,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </AccordionSection>
 
+      <AccordionSection title="Unique Human Facts" icon="🧬">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <DataRow icon="🩸" value={Math.round(lifeStats.daysPassed * 7570)} label="Liters of Blood Pumped" sub="heart pumps ~5L/min" />
+          <DataRow icon="🦠" value={`${(lifeStats.daysPassed * 330).toLocaleString()}B`} label="New Cells Created" sub="~330 billion/day" />
+          <DataRow icon="💧" value={Math.round(lifeStats.daysPassed * 2.5)} label="Liters of Saliva" sub="~2.5L/day" />
+          <DataRow icon="🧠" value={Math.round(lifeStats.daysPassed * 70000)} label="Thoughts Processed" sub="~70,000/day" />
+          <DataRow icon="👃" value={Math.round(lifeStats.daysPassed * 23040)} label="Breaths While Sleeping" sub="~8 hrs × 16/min" />
+          <DataRow icon="🎵" value={Math.round(lifeStats.daysPassed * 4)} label="Hours of Heartbeat Music" sub={`at ${bpm}bpm`} />
+        </div>
+      </AccordionSection>
+
       <AccordionSection title="Cosmic Perspective" icon="🌍">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <DataRow icon="🌍" value={cosmic.orbitsAroundSun} label="Orbits Around the Sun" />
@@ -314,6 +332,64 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           { title: "Halfway Point", date: lifeStats.milestones.halfway, color: "#2196F3" },
           { title: "Three-Quarter Mark", date: lifeStats.milestones.threeQuarter, color: "#9C27B0" },
         ]} />
+      </AccordionSection>
+
+      <AccordionSection title={`Your ${zodiac?.name ?? ""} Horoscope`} icon="✨">
+        <div className={`${GLASS} p-5 sm:p-6`}>
+          {/* Period tabs */}
+          <div className="flex justify-center gap-2 mb-5">
+            {(["today", "week", "year"] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => horoscope.fetch(p)}
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize
+                  ${horoscope.activePeriod === p && horoscope.result
+                    ? "bg-gradient-to-r from-cyan-500 to-pink-500 text-white"
+                    : "bg-white/[0.08] border border-white/10 text-white/50 hover:text-white"}`}
+              >
+                {p === "today" ? "Today" : p === "week" ? "This Week" : "This Year"}
+              </button>
+            ))}
+          </div>
+
+          {/* Loading skeleton */}
+          {horoscope.loading && (
+            <div className="flex flex-col items-center gap-3 py-6 animate-pulse">
+              <div className="w-24 h-8 bg-white/5 rounded-xl" />
+              <div className="w-full h-16 bg-white/5 rounded-xl" />
+              <div className="w-48 h-4 bg-white/5 rounded-xl" />
+            </div>
+          )}
+
+          {/* Error / no key */}
+          {horoscope.error === "no-key" && (
+            <p className="text-center text-sm text-white/30 py-4">Add your AI key in Settings to unlock your personal horoscope.</p>
+          )}
+          {horoscope.error && horoscope.error !== "no-key" && (
+            <p className="text-center text-sm text-red-400/60 py-4">{horoscope.error}</p>
+          )}
+
+          {/* Result */}
+          {horoscope.result && !horoscope.loading && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
+                {horoscope.result.theme}
+              </div>
+              <p className="text-sm text-white/80 leading-relaxed text-center max-w-md">{horoscope.result.message}</p>
+              <div className="flex items-center gap-4 text-xs">
+                <span className="text-[#00d4ff]">Focus: {horoscope.result.focus}</span>
+                <span className="text-white/40">
+                  {horoscope.result.energy === "high" ? "⚡⚡⚡" : horoscope.result.energy === "medium" ? "⚡⚡" : "⚡"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Default state */}
+          {!horoscope.result && !horoscope.loading && !horoscope.error && (
+            <p className="text-center text-sm text-white/20 py-4">Tap a period above to reveal your horoscope</p>
+          )}
+        </div>
       </AccordionSection>
 
       <LegacySnapshot isOpen={showSnapshot} onClose={() => setShowSnapshot(false)}

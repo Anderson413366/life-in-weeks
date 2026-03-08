@@ -149,32 +149,35 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
             onWeekSelect={openDiary}
           />
 
-          {/* ── Top HUD ──────────────────────────────────────── */}
+          {/* ── Mode switcher (ALWAYS visible, centered top) ──── */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20">
+            <div className="bg-black/60 backdrop-blur-xl border border-white/20 rounded-2xl p-1 flex gap-1">
+              {(["weeks", "months", "years"] as GridMode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => { setGridMode(m); api.start({ zoom: 0.85, x: 0, y: 0 }); flashHud(); }}
+                  className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all
+                    ${gridMode === m
+                      ? "bg-gradient-to-r from-cyan-500 to-pink-500 text-white shadow-lg"
+                      : "text-white/50 hover:text-white/80"}`}
+                >
+                  {m === "weeks" ? "⬛ Weeks" : m === "months" ? "⭕ Months" : "◆ Years"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Top HUD (battery + info) ─────────────────────── */}
           <AnimatePresence>
             {hudVisible && (
               <motion.div
-                className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none"
+                className="absolute top-16 left-3 right-3 flex items-center justify-between pointer-events-none"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
               >
                 <div className={`flex items-center gap-3 ${controlCls} rounded-xl px-3 py-2 pointer-events-auto`}>
                   <LifeBattery percentUsed={pct} size="sm" />
                 </div>
-
-                {/* Mode switcher */}
-                <div className="bg-white/[0.08] border border-white/[0.15] rounded-2xl p-1 flex pointer-events-auto">
-                  {(["weeks", "months", "years"] as GridMode[]).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => { setGridMode(m); api.start({ zoom: 0.85, x: 0, y: 0 }); }}
-                      className={`px-4 sm:px-5 py-1.5 rounded-xl text-xs font-medium transition-all capitalize
-                        ${gridMode === m ? "bg-white/20 text-white font-semibold" : "text-white/50 hover:text-white/80"}`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-
                 <div className={`flex items-center gap-3 ${controlDimCls} rounded-xl px-3 py-2 text-xs pointer-events-auto`}>
                   <span>Wk <strong className="text-white">{lifeStats.currentWeekInYear}</strong></span>
                   <span>Yr <strong className="text-white">{lifeStats.currentYearOfLife}</strong></span>
