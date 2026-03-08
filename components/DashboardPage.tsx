@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import type { LifeStats, DynamicStats, UserAverages } from "../types";
 import {
@@ -16,6 +16,7 @@ import SectionHeading from "./SectionHeading";
 import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
 import AIInsightBanner from "./AIInsightBanner";
+import LegacySnapshot from "./LegacySnapshot";
 import type { MoodEntry } from "../hooks/useMood";
 import type { AppMode } from "../lib/theme";
 
@@ -33,6 +34,7 @@ interface DashboardPageProps {
   todayMood: MoodEntry | null;
   recentMoods: MoodEntry[];
   mode: AppMode;
+  displayName: string;
   onSaveMood: (mood: string, energy: number, note?: string) => Promise<void>;
 }
 
@@ -44,7 +46,8 @@ const section = {
   }),
 };
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay, averages, todayMood, recentMoods, mode, onSaveMood }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay, averages, todayMood, recentMoods, mode, displayName, onSaveMood }) => {
+  const [showSnapshot, setShowSnapshot] = useState(false);
   const pct = parseFloat(lifeStats.percentageLived);
   const birthDate = useMemo(() => new Date(birthYear, birthMonth - 1, birthDay), [birthYear, birthMonth, birthDay]);
   const now = useMemo(() => new Date(), []);
@@ -81,9 +84,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
           birthMonth={birthMonth}
           birthDay={birthDay}
         />
-        <div className="mt-4 flex flex-col items-center gap-1">
+        <div className="mt-4 flex flex-col items-center gap-2">
           <span className="text-[0.6rem] text-text-muted/60 uppercase tracking-wider">Life Remaining</span>
           <LifeBattery percentUsed={pct} size="lg" />
+          <button
+            onClick={() => setShowSnapshot(true)}
+            className="mt-2 px-4 py-1.5 rounded-full text-xs glass border border-primary/20 text-primary hover:bg-primary/10 transition-colors"
+          >
+            📸 Share Snapshot
+          </button>
         </div>
       </motion.section>
 
@@ -236,6 +245,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
           ]}
         />
       </motion.section>
+
+      <LegacySnapshot
+        isOpen={showSnapshot}
+        onClose={() => setShowSnapshot(false)}
+        lifeStats={lifeStats}
+        birthYear={birthYear}
+        birthMonth={birthMonth}
+        birthDay={birthDay}
+        displayName={displayName}
+        todayMood={todayMood}
+      />
     </motion.div>
   );
 };

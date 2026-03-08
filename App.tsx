@@ -113,6 +113,7 @@ const App: React.FC = () => {
               todayMood={todayMood}
               recentMoods={recentMoods}
               mode={mode}
+              displayName={profile.greeting || profile.displayName}
               onSaveMood={saveMood}
             />
           ) : (

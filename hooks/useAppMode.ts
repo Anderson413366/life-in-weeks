@@ -1,8 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { getMode, setMode as persistMode, type AppMode } from "../lib/theme";
 
 export function useAppMode() {
   const [mode, setModeState] = useState<AppMode>(getMode);
+
+  // Sync body class
+  useEffect(() => {
+    document.body.classList.toggle("focus-mode", mode === "focus");
+  }, [mode]);
 
   const setMode = useCallback((m: AppMode) => {
     setModeState(m);

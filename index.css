@@ -13,6 +13,11 @@ body {
   animation: bg-shift 20s ease-in-out infinite;
 }
 
+body.focus-mode {
+  background: #000000 !important;
+  animation: none !important;
+}
+
 /* ── SVG ring animation ─────────────────────────────────────── */
 @keyframes ring-fill {
   from { stroke-dashoffset: var(--ring-circumference); }
