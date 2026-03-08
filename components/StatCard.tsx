@@ -10,6 +10,8 @@ interface StatCardProps {
   variant?: Variant;
   index?: number;
   sublabel?: string;
+  /** Skip animation for rapidly ticking values (e.g. seconds) */
+  live?: boolean;
 }
 
 const STYLES: Record<string, { text: string; border: string; glow: string }> = {
@@ -22,7 +24,7 @@ const STYLES: Record<string, { text: string; border: string; glow: string }> = {
   mini:           { text: "from-white to-gray-400",       border: "from-primary/60 to-accent/60", glow: "" },
 };
 
-const StatCard: React.FC<StatCardProps> = ({ value, label, variant = "default", index = 0, sublabel }) => {
+const StatCard: React.FC<StatCardProps> = ({ value, label, variant = "default", index = 0, sublabel, live = false }) => {
   const isMini = variant === "mini";
   const s = STYLES[variant] ?? STYLES.default;
 
@@ -39,7 +41,7 @@ const StatCard: React.FC<StatCardProps> = ({ value, label, variant = "default", 
 
       <div className={`font-bold mb-1.5 leading-none counter-digits text-transparent bg-clip-text bg-gradient-to-b ${s.text}
                        ${isMini ? "text-xl sm:text-2xl" : "text-3xl sm:text-4xl"}`}>
-        <AnimatedCounter value={value} />
+        {live ? value.toLocaleString() : <AnimatedCounter value={value} />}
       </div>
       <div className={`uppercase tracking-[0.15em] font-medium text-text-muted ${isMini ? "text-[0.55rem] sm:text-[0.65rem]" : "text-[0.6rem] sm:text-xs"}`}>
         {label}

@@ -66,8 +66,8 @@ const GridCell: React.FC<CellProps> = React.memo(
           transition-all duration-200 ease-in-out relative cursor-pointer
           hover:scale-125 hover:border-primary hover:z-10 hover:shadow-lg hover:shadow-primary/30
           focus:outline-none focus:ring-2 focus:ring-primary focus:z-10
-          ${isPast ? "bg-primary shadow-sm shadow-primary/20" : ""}
-          ${isCurrent ? "bg-accent !border-accent shadow-md shadow-accent/40 animate-pulse-slow z-[5]" : ""}
+          ${isPast ? "!bg-primary shadow-sm shadow-primary/20" : ""}
+          ${isCurrent ? "!bg-accent !border-accent shadow-md shadow-accent/40 animate-pulse-slow z-[5]" : ""}
           ${isDecadeMarker ? "before:content-[''] before:absolute before:left-[-2px] before:top-0 before:bottom-0 before:w-0.5 before:bg-decade-marker before:opacity-70 before:z-[1]" : ""}
           ${hasDiary ? "after:content-['📝'] after:absolute after:text-[9px] after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:opacity-70 after:pointer-events-none" : ""}
         `}

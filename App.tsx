@@ -65,9 +65,9 @@ const App: React.FC = () => {
                 lifeStats={lifeStats}
                 dynamicStats={dynamicStats}
                 quote={quote}
-                birthYear={new Date(birthdate).getFullYear()}
-                birthMonth={new Date(birthdate).getMonth() + 1}
-                birthDay={new Date(birthdate).getDate()}
+                birthYear={parseInt(birthdate.split("-")[0], 10)}
+                birthMonth={parseInt(birthdate.split("-")[1], 10)}
+                birthDay={parseInt(birthdate.split("-")[2], 10)}
               />
             ) : (
               <GridPage

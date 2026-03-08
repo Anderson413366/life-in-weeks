@@ -69,12 +69,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
       <motion.section custom={2} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Live Chronometer" />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-          <StatCard value={dynamicStats.hoursLived}      label="Hours Lived"   variant="mini" index={0} />
-          <StatCard value={dynamicStats.minutesLived}    label="Minutes Lived" variant="mini" index={1} />
-          <StatCard value={dynamicStats.secondsLived}    label="Seconds Lived" variant="mini" index={2} />
-          <StatCard value={dynamicStats.hoursRemaining}  label="Hours Rem."    variant="mini" index={3} />
-          <StatCard value={dynamicStats.minutesRemaining} label="Minutes Rem." variant="mini" index={4} />
-          <StatCard value={dynamicStats.secondsRemaining} label="Seconds Rem." variant="mini" index={5} />
+          <StatCard value={dynamicStats.hoursLived}      label="Hours Lived"   variant="mini" index={0} live />
+          <StatCard value={dynamicStats.minutesLived}    label="Minutes Lived" variant="mini" index={1} live />
+          <StatCard value={dynamicStats.secondsLived}    label="Seconds Lived" variant="mini" index={2} live />
+          <StatCard value={dynamicStats.hoursRemaining}  label="Hours Rem."    variant="mini" index={3} live />
+          <StatCard value={dynamicStats.minutesRemaining} label="Minutes Rem." variant="mini" index={4} live />
+          <StatCard value={dynamicStats.secondsRemaining} label="Seconds Rem." variant="mini" index={5} live />
         </div>
       </motion.section>
 
@@ -82,8 +82,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
       <motion.section custom={3} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Waking Life" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
-          <StatCard value={dynamicStats.wakingHoursLived}     label="Waking Hours Lived" variant="waking" index={0} sublabel="~16 hrs/day awake" />
-          <StatCard value={dynamicStats.wakingHoursRemaining} label="Waking Hours Rem."  variant="waking" index={1} sublabel="make them count" />
+          <StatCard value={dynamicStats.wakingHoursLived}     label="Waking Hours Lived" variant="waking" index={0} sublabel="~16 hrs/day awake" live />
+          <StatCard value={dynamicStats.wakingHoursRemaining} label="Waking Hours Rem."  variant="waking" index={1} sublabel="make them count" live />
         </div>
       </motion.section>
 
