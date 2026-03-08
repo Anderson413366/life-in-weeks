@@ -15,7 +15,7 @@ import GridPage from "./components/GridPage";
 
 const App: React.FC = () => {
   const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
-  const { birthdate, lifeExpectancy, loading: profileLoading, updateBirthdate, updateLifeExpectancy } = useProfile(user?.id);
+  const { birthdate, lifeExpectancy, loading: profileLoading, updateBirthdate, updateLifeExpectancy, updateApiKey } = useProfile(user?.id);
   const { entries: diaryEntries, saveEntry } = useDiary(user?.id);
   const { lifeStats, dynamicStats } = useLifeStats(birthdate, lifeExpectancy);
 
@@ -55,6 +55,7 @@ const App: React.FC = () => {
           lifeExpectancy={lifeExpectancy}
           onBirthdateChange={updateBirthdate}
           onLifeExpectancyChange={updateLifeExpectancy}
+          onApiKeyChange={updateApiKey}
         />
 
         {birthdate && lifeStats ? (

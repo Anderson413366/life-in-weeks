@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
-import { DEFAULT_LIFE_EXPECTANCY } from "../constants";
-import type { Profile } from "../types";
+import { DEFAULT_LIFE_EXPECTANCY, AI_STORAGE_KEY } from "../constants";
 
 export function useProfile(userId: string | undefined) {
   const [birthdate, setBirthdate] = useState<string>("");
@@ -18,18 +17,29 @@ export function useProfile(userId: string | undefined) {
     let cancelled = false;
 
     async function load() {
+      // Try to load existing profile
       const { data } = await supabase
         .from("liw_profiles")
-        .select("birthdate, life_expectancy")
+        .select("birthdate, life_expectancy, gemini_api_key")
         .eq("id", userId)
-        .single<Pick<Profile, "birthdate" | "life_expectancy">>();
+        .maybeSingle();
 
       if (cancelled) return;
 
       if (data) {
         if (data.birthdate) setBirthdate(data.birthdate);
-        setLifeExpectancy(data.life_expectancy);
+        if (data.life_expectancy) setLifeExpectancy(data.life_expectancy);
+        // Sync API key from DB → localStorage
+        if (data.gemini_api_key) {
+          localStorage.setItem(AI_STORAGE_KEY, data.gemini_api_key);
+        }
+      } else {
+        // Auto-create profile on first login
+        await supabase
+          .from("liw_profiles")
+          .insert({ id: userId, life_expectancy: DEFAULT_LIFE_EXPECTANCY });
       }
+
       setLoading(false);
     }
 
@@ -39,9 +49,8 @@ export function useProfile(userId: string | undefined) {
 
   // Persist profile changes
   const saveProfile = useCallback(
-    async (fields: { birthdate?: string; life_expectancy?: number }) => {
+    async (fields: Record<string, unknown>) => {
       if (!userId) return;
-
       await supabase
         .from("liw_profiles")
         .upsert({ id: userId, ...fields }, { onConflict: "id" });
@@ -65,5 +74,18 @@ export function useProfile(userId: string | undefined) {
     [saveProfile],
   );
 
-  return { birthdate, lifeExpectancy, loading, updateBirthdate, updateLifeExpectancy };
+  const updateApiKey = useCallback(
+    (key: string) => {
+      const trimmed = key.trim();
+      if (trimmed) {
+        localStorage.setItem(AI_STORAGE_KEY, trimmed);
+      } else {
+        localStorage.removeItem(AI_STORAGE_KEY);
+      }
+      saveProfile({ gemini_api_key: trimmed || null });
+    },
+    [saveProfile],
+  );
+
+  return { birthdate, lifeExpectancy, loading, updateBirthdate, updateLifeExpectancy, updateApiKey };
 }

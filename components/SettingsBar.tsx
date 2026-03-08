@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MIN_LIFE_EXPECTANCY, MAX_LIFE_EXPECTANCY, DEFAULT_LIFE_EXPECTANCY } from "../constants";
-import { getApiKey, setApiKey } from "../lib/ai";
+import { getApiKey } from "../lib/ai";
 
 interface SettingsBarProps {
   birthdate: string;
   lifeExpectancy: number;
   onBirthdateChange: (v: string) => void;
   onLifeExpectancyChange: (v: number) => void;
+  onApiKeyChange: (key: string) => void;
 }
 
-const SettingsBar: React.FC<SettingsBarProps> = ({ birthdate, lifeExpectancy, onBirthdateChange, onLifeExpectancyChange }) => {
+const SettingsBar: React.FC<SettingsBarProps> = ({ birthdate, lifeExpectancy, onBirthdateChange, onLifeExpectancyChange, onApiKeyChange }) => {
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiKeyValue, setApiKeyValue] = useState(() => getApiKey());
 
@@ -72,7 +73,7 @@ const SettingsBar: React.FC<SettingsBarProps> = ({ birthdate, lifeExpectancy, on
                          focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
             <button
-              onClick={() => { setApiKey(apiKeyValue); setShowApiKey(false); }}
+              onClick={() => { onApiKeyChange(apiKeyValue); setShowApiKey(false); }}
               className="h-9 px-4 rounded-lg bg-primary/20 text-primary text-xs font-semibold hover:bg-primary/30 transition-colors border border-primary/30"
             >
               Save
