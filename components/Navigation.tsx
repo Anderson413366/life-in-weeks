@@ -19,41 +19,44 @@ const tabs: { id: Page; label: string; icon: string }[] = [
 ];
 
 const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate, greeting, avatarUrl }) => (
-  <nav className="flex items-center justify-between w-full max-w-7xl mx-auto mb-4 sm:mb-6">
-    <div className="flex gap-0.5 sm:gap-1 p-1 glass rounded-xl overflow-x-auto">
+  <nav className="flex flex-col items-center w-full max-w-7xl mx-auto mb-4 sm:mb-6 gap-2">
+    {/* Centered tab bar */}
+    <div className="flex gap-0.5 sm:gap-1 p-1 bg-[#0d1b2e] border border-[#1e3a5f] rounded-xl overflow-x-auto">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onNavigate(tab.id)}
           className={`relative px-2.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 whitespace-nowrap
-            ${currentPage === tab.id ? "text-white" : "text-text-muted hover:text-white"}`}
+            ${currentPage === tab.id ? "text-white" : "text-white/50 hover:text-white"}`}
         >
           {currentPage === tab.id && (
             <motion.div
               layoutId="active-tab"
-              className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/10 border border-primary/30 rounded-lg"
+              className="absolute inset-0 bg-[#00d4ff]/15 border border-[#00d4ff]/30 rounded-lg"
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
           )}
           <span className="relative z-10 flex items-center gap-1.5">
-            <span className="text-xs opacity-70">{tab.icon}</span>
+            <span className="text-xs">{tab.icon}</span>
             <span className="hidden sm:inline">{tab.label}</span>
           </span>
         </button>
       ))}
     </div>
 
-    {/* User greeting + avatar */}
-    <div className="flex items-center gap-2">
-      {greeting && <span className="text-xs text-text-muted/60 hidden sm:block">Hi, {greeting}</span>}
-      {avatarUrl ? (
-        <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover border border-box-border" />
-      ) : (
-        <div className="w-7 h-7 rounded-full bg-primary/10 border border-box-border flex items-center justify-center text-xs text-primary">
-          {greeting ? greeting[0].toUpperCase() : "?"}
-        </div>
-      )}
-    </div>
+    {/* Greeting + avatar */}
+    {(greeting || avatarUrl) && (
+      <div className="flex items-center gap-2">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover border border-[#1e3a5f]" />
+        ) : greeting ? (
+          <div className="w-6 h-6 rounded-full bg-[#0d1b2e] border border-[#1e3a5f] flex items-center justify-center text-[0.55rem] text-[#00d4ff] font-bold">
+            {greeting[0].toUpperCase()}
+          </div>
+        ) : null}
+        {greeting && <span className="text-[0.65rem] text-white/40">Hi, {greeting}</span>}
+      </div>
+    )}
   </nav>
 );
 
