@@ -8,11 +8,13 @@ import {
 
 import HeroRing from "./HeroRing";
 import ExactAgeTicker from "./ExactAgeTicker";
+import MoodChecker from "./MoodChecker";
 import StatCard from "./StatCard";
 import DataCard from "./DataCard";
 import SectionHeading from "./SectionHeading";
 import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
+import type { MoodEntry } from "../hooks/useMood";
 
 interface DashboardPageProps {
   lifeStats: LifeStats;
@@ -22,6 +24,9 @@ interface DashboardPageProps {
   birthMonth: number;
   birthDay: number;
   averages: UserAverages;
+  todayMood: MoodEntry | null;
+  recentMoods: MoodEntry[];
+  onSaveMood: (mood: string, energy: number, note?: string) => Promise<void>;
 }
 
 const section = {
@@ -32,7 +37,7 @@ const section = {
   }),
 };
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay, averages }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, quote, birthYear, birthMonth, birthDay, averages, todayMood, recentMoods, onSaveMood }) => {
   const pct = parseFloat(lifeStats.percentageLived);
   const birthDate = useMemo(() => new Date(birthYear, birthMonth - 1, birthDay), [birthYear, birthMonth, birthDay]);
   const now = useMemo(() => new Date(), []);
@@ -69,8 +74,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
         />
       </motion.section>
 
-      {/* ── Your Exact Age ───────────────────────────────────── */}
+      {/* ── Mental Health Check ─────────────────────────────── */}
       <motion.section custom={1} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Daily Check-In" />
+        <MoodChecker todayMood={todayMood} recentMoods={recentMoods} onSave={onSaveMood} />
+      </motion.section>
+
+      {/* ── Your Exact Age ───────────────────────────────────── */}
+      <motion.section custom={2} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Your Exact Age" />
         <ExactAgeTicker birthDate={birthDate} birthYear={birthYear} />
       </motion.section>

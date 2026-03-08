@@ -6,6 +6,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
 import { useDiary } from "./hooks/useDiary";
 import { useLifeStats } from "./hooks/useLifeStats";
+import { useMood } from "./hooks/useMood";
 
 import AuthGate from "./components/AuthGate";
 import Navigation, { type Page } from "./components/Navigation";
@@ -18,6 +19,7 @@ const App: React.FC = () => {
   const profile = useProfile(user?.id, user?.email);
   const { entries: diaryEntries, saveEntry } = useDiary(user?.id);
   const { lifeStats, dynamicStats } = useLifeStats(profile.birthdate, profile.lifeExpectancy);
+  const { todayMood, recentMoods, saveMood } = useMood(user?.id);
 
   const [page, setPage] = useState<Page>("dashboard");
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
@@ -84,6 +86,9 @@ const App: React.FC = () => {
               birthMonth={parseInt(profile.birthdate.split("-")[1], 10)}
               birthDay={parseInt(profile.birthdate.split("-")[2], 10)}
               averages={profile.averages}
+              todayMood={todayMood}
+              recentMoods={recentMoods}
+              onSaveMood={saveMood}
             />
           ) : (
             <div key="empty" className="flex flex-col items-center justify-center py-20 gap-4">
