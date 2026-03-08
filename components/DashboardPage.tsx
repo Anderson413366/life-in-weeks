@@ -7,6 +7,7 @@ import {
 } from "../lib/lifeData";
 
 import HeroRing from "./HeroRing";
+import LifeBattery from "./LifeBattery";
 import ExactAgeTicker from "./ExactAgeTicker";
 import MoodChecker from "./MoodChecker";
 import StatCard from "./StatCard";
@@ -72,6 +73,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
           birthMonth={birthMonth}
           birthDay={birthDay}
         />
+        <div className="mt-4 flex flex-col items-center gap-1">
+          <span className="text-[0.6rem] text-text-muted/60 uppercase tracking-wider">Life Remaining</span>
+          <LifeBattery percentUsed={pct} size="lg" />
+        </div>
       </motion.section>
 
       {/* ── Mental Health Check ─────────────────────────────── */}

@@ -6,6 +6,7 @@ import type { LifeStats, DiaryMap, SelectedWeek, HoverInfo } from "../types";
 import WeeksGrid from "./WeeksGrid";
 import DiaryModal from "./DiaryModal";
 import DiaryList from "./DiaryList";
+import LifeBattery from "./LifeBattery";
 import Tooltip from "./Tooltip";
 
 interface GridPageProps {
@@ -75,11 +76,8 @@ const GridPage: React.FC<GridPageProps> = ({ lifeStats, birthdate, lifeExpectanc
       {/* Info bar */}
       <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 glass rounded-xl p-3 sm:p-4">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-text-muted">Life Progress</span>
-          <div className="w-32 h-2 bg-[rgba(255,255,255,0.05)] rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full" style={{ width: `${pct}%` }} />
-          </div>
-          <span className="text-xs font-bold text-primary counter-digits">{lifeStats.percentageLived}%</span>
+          <span className="text-xs text-text-muted">Life Remaining</span>
+          <LifeBattery percentUsed={pct} size="sm" />
         </div>
         <div className="h-4 w-px bg-box-border hidden sm:block" />
         <span className="text-xs text-text-muted">
