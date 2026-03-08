@@ -120,7 +120,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
           ref={containerRef}
           {...bind()}
           className={`absolute left-0 right-0 bottom-0 overflow-hidden ${isFocus ? "bg-black" : "bg-[#080818]"}`}
-          style={{ touchAction: "none", top: "48px" }}
+          style={{ touchAction: "none", top: "60px" }}
         >
           <ResonanceCanvas
             weeksPassed={lifeStats.weeksPassed}

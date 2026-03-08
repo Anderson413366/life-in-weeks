@@ -17,28 +17,158 @@ interface ResonanceCanvasProps {
   onWeekSelect: (weekIndex: number, row: number, col: number) => void;
 }
 
-// ── Mode-specific colors ─────────────────────────────────────
-const C_WEEKS  = { lived: "#00d4ff", current: "#ec4899", glow: "rgba(236,72,153,0.6)", future: "rgba(255,255,255,0.09)", futureStroke: "rgba(255,255,255,0.18)", diary: "#fbbf24" };
-const C_MONTHS = { lived: "#00ff9d", current: "#ff9500", glow: "rgba(255,149,0,0.6)", future: "transparent", futureStroke: "rgba(0,255,157,0.2)" };
-const C_YEARS  = { lived: "#bf5fff", current: "#ffd700", glow: "rgba(255,215,0,0.6)", future: "transparent", futureStroke: "rgba(191,95,255,0.25)" };
-
-const BG = "#080818";
-const LABEL = "rgba(255,255,255,0.35)";
-const LABEL_BRIGHT = "rgba(255,255,255,0.55)";
-const HEADER_C = "rgba(255,255,255,0.25)";
-const SEP = "rgba(255,255,255,0.06)";
-
-// ── Layout constants ─────────────────────────────────────────
-const W_CELL = 14, W_GAP = 3, W_COLS = 52, W_LBL = 28, W_HDR = 18;
-const M_RAD = 12, M_GAP = 5, M_COLS = 12, M_LBL = 32;
-const Y_SIZE = 42, Y_GAP = 16, Y_COLS = 10, Y_LBL = 44;
-
-export function getGridColors(gm: GridMode) {
-  return gm === "weeks" ? { lived: C_WEEKS.lived, current: C_WEEKS.current }
-       : gm === "months" ? { lived: C_MONTHS.lived, current: C_MONTHS.current }
-       : { lived: C_YEARS.lived, current: C_YEARS.current };
+interface ModeConfig {
+  cols: number;
+  rows: number;
+  cell: number;
+  gap: number;
+  colorLived: string;
+  colorCurrent: string;
+  colorGlow: string;
+  colorFuture: string;
+  colorFutureStroke: string;
+  totalUnits: number;
+  unitsPassed: number;
+  labelEvery: number;
+  labelMultiplier: number;
 }
 
+export function getGridColors(gm: GridMode) {
+  if (gm === "months") return { lived: "#00ff9d", current: "#ff6b00" };
+  if (gm === "years") return { lived: "#bf5fff", current: "#ffd700" };
+  return { lived: "#00d4ff", current: "#ec4899" };
+}
+
+const BG = "#080818";
+const LABEL_BASE = 36;
+const TOP_PAD_BASE = 16;
+
+function buildConfig(p: { weeksPassed: number; totalYears: number }, gm: GridMode): ModeConfig {
+  if (gm === "months") {
+    return {
+      cols: 12, rows: p.totalYears, cell: 18, gap: 3,
+      colorLived: "#00ff9d", colorCurrent: "#ff6b00", colorGlow: "rgba(255,107,0,0.7)",
+      colorFuture: "rgba(0,255,157,0.07)", colorFutureStroke: "rgba(0,255,157,0.25)",
+      totalUnits: p.totalYears * 12, unitsPassed: Math.floor(p.weeksPassed * 12 / 52),
+      labelEvery: 1, labelMultiplier: 1,
+    };
+  }
+  if (gm === "years") {
+    return {
+      cols: 10, rows: Math.ceil(p.totalYears / 10), cell: 36, gap: 3,
+      colorLived: "#bf5fff", colorCurrent: "#ffd700", colorGlow: "rgba(255,215,0,0.7)",
+      colorFuture: "rgba(191,95,255,0.08)", colorFutureStroke: "rgba(191,95,255,0.35)",
+      totalUnits: p.totalYears, unitsPassed: Math.floor(p.weeksPassed / 52),
+      labelEvery: 1, labelMultiplier: 10,
+    };
+  }
+  // weeks
+  return {
+    cols: 52, rows: p.totalYears, cell: 11, gap: 3,
+    colorLived: "#00d4ff", colorCurrent: "#ec4899", colorGlow: "rgba(236,72,153,0.7)",
+    colorFuture: "rgba(0,212,255,0.07)", colorFutureStroke: "rgba(0,212,255,0.2)",
+    totalUnits: p.totalYears * 52, unitsPassed: p.weeksPassed,
+    labelEvery: 1, labelMultiplier: 1,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UNIFIED DRAW — one function for all three modes
+// ═══════════════════════════════════════════════════════════════
+function drawGrid(
+  ctx: CanvasRenderingContext2D,
+  _offsetX: number, offsetY: number,
+  t: number, z: number, w: number,
+  cfg: ModeConfig, diaryEntries: DiaryMap, hudVisible: boolean,
+) {
+  const { cols, rows, cell, gap, colorLived, colorCurrent, colorGlow, colorFuture, colorFutureStroke, unitsPassed, totalUnits, labelEvery, labelMultiplier } = cfg;
+  const cz = cell * z;
+  const gz = gap * z;
+  const step = cz + gz;
+  const lw = LABEL_BASE * z;
+  const topPad = TOP_PAD_BASE * z;
+  const totalW = lw + cols * step;
+  const cx0 = Math.max(16 * z, (w - totalW) / 2);
+
+  // Viewport culling
+  void offsetY;
+
+  for (let row = 0; row < rows; row++) {
+    const ry = topPad + row * step;
+
+    // Row culling
+    if (ry + offsetY > w + step) break;
+    if (ry + cz + offsetY < -step) continue;
+
+    // Year label
+    if (hudVisible && row % labelEvery === 0) {
+      const fs = Math.max(7, Math.min(12, 10 * z));
+      ctx.font = `600 ${fs}px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = row % 10 === 0 ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.3)";
+      ctx.fillText(String(row * labelMultiplier), cx0 - 6 * z, ry + cz / 2);
+    }
+
+    // Decade separator
+    if (row > 0 && row % 10 === 0) {
+      ctx.fillStyle = "rgba(255,255,255,0.07)";
+      ctx.fillRect(cx0, ry - gz / 2, cols * step - gz, Math.max(1, z));
+    }
+
+    for (let col = 0; col < cols; col++) {
+      const cx = cx0 + col * step;
+      const idx = row * cols + col;
+      if (idx >= totalUnits) break;
+
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+
+      if (idx === unitsPassed) {
+        // Current — glowing
+        const pulse = 0.75 + 0.25 * Math.sin(t * 2.5);
+        ctx.shadowColor = colorGlow;
+        ctx.shadowBlur = 14 * z;
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = colorCurrent;
+        ctx.beginPath();
+        ctx.roundRect(cx, ry, cz, cz, Math.max(2, 3 * z));
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+      } else if (idx < unitsPassed) {
+        // Lived — solid
+        ctx.fillStyle = colorLived;
+        ctx.beginPath();
+        ctx.roundRect(cx, ry, cz, cz, Math.max(2, 3 * z));
+        ctx.fill();
+      } else {
+        // Future — dim fill + stroke
+        ctx.fillStyle = colorFuture;
+        ctx.beginPath();
+        ctx.roundRect(cx, ry, cz, cz, Math.max(2, 3 * z));
+        ctx.fill();
+        ctx.strokeStyle = colorFutureStroke;
+        ctx.lineWidth = Math.max(0.5, 1 * z);
+        ctx.stroke();
+      }
+
+      // Diary dot (weeks mode only)
+      if (cfg.cols === 52 && diaryEntries[idx.toString()]) {
+        ctx.beginPath();
+        ctx.arc(cx + cz / 2, ry + cz / 2, Math.max(1.5, 2 * z), 0, Math.PI * 2);
+        ctx.fillStyle = "#fbbf24";
+        ctx.globalAlpha = 0.9;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPONENT
+// ═══════════════════════════════════════════════════════════════
 const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef(0);
@@ -62,15 +192,16 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
       sizeRef.current = { w, h, dpr };
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Background
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, w, h);
 
     ctx.save();
     ctx.translate(p.offsetX, p.offsetY);
 
-    if (p.gridMode === "weeks") drawWeeks(ctx, p, time / 1000, p.zoom, w);
-    else if (p.gridMode === "months") drawMonths(ctx, p, time / 1000, p.zoom, w);
-    else drawYears(ctx, p, time / 1000, p.zoom, w);
+    const cfg = buildConfig({ weeksPassed: p.weeksPassed, totalYears: p.totalYears }, p.gridMode);
+    drawGrid(ctx, p.offsetX, p.offsetY, time / 1000, p.zoom, w, cfg, p.diaryEntries, p.hudVisible);
 
     ctx.restore();
   }, []);
@@ -82,6 +213,7 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
     return () => { active = false; cancelAnimationFrame(rafRef.current); };
   }, [draw]);
 
+  // ── Hit testing ────────────────────────────────────────────
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -92,166 +224,29 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
     const z = p.zoom;
     const w = canvas.clientWidth;
 
-    if (p.gridMode === "weeks") {
-      const cz = W_CELL * z, gz = W_GAP * z, step = cz + gz, lw = W_LBL * z, hh = W_HDR * z;
-      const tw = lw + W_COLS * step;
-      const cx0 = Math.max(16, (w - tw) / 2);
-      const col = Math.floor((mx - cx0 - lw) / step);
-      const row = Math.floor((my - hh) / step);
-      if (col >= 0 && col < W_COLS && row >= 0 && row < p.totalYears) {
-        const idx = row * W_COLS + col;
-        if (idx <= p.weeksPassed) p.onWeekSelect(idx, row, col);
-      }
-    } else if (p.gridMode === "months") {
-      const rz = M_RAD * z, gz = M_GAP * z, step = rz * 2 + gz, lw = M_LBL * z;
-      const tw = lw + M_COLS * step;
-      const cx0 = Math.max(16, (w - tw) / 2);
-      const col = Math.floor((mx - cx0 - lw) / step);
-      const row = Math.floor(my / step);
-      if (col >= 0 && col < M_COLS && row >= 0) {
-        const monthIdx = row * M_COLS + col;
-        const weekIdx = Math.floor(monthIdx * (52 / 12));
-        if (weekIdx <= p.weeksPassed) p.onWeekSelect(weekIdx, Math.floor(weekIdx / 52), weekIdx % 52);
-      }
-    } else {
-      const sz = Y_SIZE * z, gz = Y_GAP * z, step = sz + gz, lw = Y_LBL * z;
-      const tw = lw + Y_COLS * step;
-      const cx0 = Math.max(16, (w - tw) / 2);
-      const col = Math.floor((mx - cx0 - lw) / step);
-      const row = Math.floor(my / step);
-      if (col >= 0 && col < Y_COLS && row >= 0) {
-        const yearIdx = row * Y_COLS + col;
-        const weekIdx = yearIdx * 52;
-        if (weekIdx <= p.weeksPassed) p.onWeekSelect(weekIdx, yearIdx, 0);
-      }
-    }
+    const cfg = buildConfig({ weeksPassed: p.weeksPassed, totalYears: p.totalYears }, p.gridMode);
+    const cz = cfg.cell * z, gz = cfg.gap * z, step = cz + gz;
+    const lw = LABEL_BASE * z;
+    const topPad = TOP_PAD_BASE * z;
+    const totalW = lw + cfg.cols * step;
+    const cx0 = Math.max(16 * z, (w - totalW) / 2);
+
+    const col = Math.floor((mx - cx0) / step);
+    const row = Math.floor((my - topPad) / step);
+
+    if (col < 0 || col >= cfg.cols || row < 0 || row >= cfg.rows) return;
+    const idx = row * cfg.cols + col;
+    if (idx > cfg.unitsPassed) return;
+
+    // Convert to week index for the diary
+    let weekIdx = idx;
+    if (p.gridMode === "months") weekIdx = Math.floor(idx * 52 / 12);
+    else if (p.gridMode === "years") weekIdx = idx * 52;
+
+    p.onWeekSelect(weekIdx, Math.floor(weekIdx / 52), weekIdx % 52);
   }, []);
 
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ touchAction: "none" }} onClick={handleClick} />;
 };
-
-// ════ WEEKS ═══════════════════════════════════════════════════
-function drawWeeks(ctx: CanvasRenderingContext2D, p: any, t: number, z: number, cw: number) {
-  const C = C_WEEKS;
-  const cz = W_CELL * z, gz = W_GAP * z, step = cz + gz, lw = W_LBL * z, hh = W_HDR * z;
-  const tw = lw + W_COLS * step;
-  const cx0 = Math.max(16, (cw - tw) / 2);
-
-  if (p.hudVisible && z > 0.35) {
-    const fs = Math.max(6, Math.min(12, 9 * z));
-    ctx.font = `600 ${fs}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = HEADER_C;
-    for (let c = 0; c < W_COLS; c++) ctx.fillText(`${c + 1}`, cx0 + lw + c * step + cz / 2, hh / 2);
-  }
-
-  for (let row = 0; row < p.totalYears; row++) {
-    const ry = hh + row * step;
-    if (p.hudVisible && z > 0.35) {
-      const fs = Math.max(6, Math.min(12, 9 * z));
-      ctx.font = `600 ${fs}px system-ui`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-      ctx.fillStyle = row % 10 === 0 ? LABEL_BRIGHT : LABEL;
-      ctx.fillText(`${row}`, cx0 + lw - 3 * z, ry + cz / 2);
-    }
-    if (row > 0 && row % 10 === 0) { ctx.fillStyle = SEP; ctx.fillRect(cx0 + lw, ry - gz / 2, W_COLS * step, 1); }
-
-    for (let col = 0; col < W_COLS; col++) {
-      const cx = cx0 + lw + col * step;
-      const idx = row * W_COLS + col;
-      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-
-      if (idx === p.weeksPassed) {
-        ctx.shadowColor = C.glow; ctx.shadowBlur = 12 * z; ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 2.8);
-        ctx.fillStyle = C.current; ctx.beginPath(); ctx.roundRect(cx, ry, cz, cz, 2); ctx.fill();
-        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
-      } else if (idx < p.weeksPassed) {
-        ctx.fillStyle = C.lived; ctx.beginPath(); ctx.roundRect(cx, ry, cz, cz, 2); ctx.fill();
-      } else {
-        ctx.fillStyle = C.future; ctx.beginPath(); ctx.roundRect(cx, ry, cz, cz, 2); ctx.fill();
-        ctx.strokeStyle = C.futureStroke; ctx.lineWidth = 0.5; ctx.stroke();
-      }
-      if (p.diaryEntries[idx.toString()]) {
-        ctx.beginPath(); ctx.arc(cx + cz / 2, ry + cz / 2, Math.max(1.5, 2 * z), 0, Math.PI * 2);
-        ctx.fillStyle = C.diary; ctx.globalAlpha = 0.9; ctx.fill(); ctx.globalAlpha = 1;
-      }
-    }
-  }
-}
-
-// ════ MONTHS (circles, 12 cols × 90 rows) ════════════════════
-function drawMonths(ctx: CanvasRenderingContext2D, p: any, t: number, z: number, cw: number) {
-  const C = C_MONTHS;
-  const rz = M_RAD * z, gz = M_GAP * z, step = rz * 2 + gz, lw = M_LBL * z;
-  const tw = lw + M_COLS * step;
-  const cx0 = Math.max(16, (cw - tw) / 2);
-  const monthsPassed = Math.floor(p.weeksPassed / (52 / 12));
-
-  for (let row = 0; row < p.totalYears; row++) {
-    const ry = row * step + rz + 4 * z;
-
-    if (p.hudVisible) {
-      ctx.font = `500 ${Math.max(7, 10 * z)}px system-ui`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-      ctx.fillStyle = row % 10 === 0 ? LABEL_BRIGHT : LABEL;
-      ctx.fillText(`${row}`, cx0 + lw - 4 * z, ry);
-    }
-    if (row > 0 && row % 10 === 0) { ctx.fillStyle = SEP; ctx.fillRect(cx0 + lw, ry - rz, M_COLS * step, 1); }
-
-    for (let col = 0; col < M_COLS; col++) {
-      const monthIdx = row * M_COLS + col;
-      if (monthIdx >= p.totalYears * 12) break;
-      const cx = cx0 + lw + col * step + rz;
-      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-
-      if (monthIdx === monthsPassed) {
-        ctx.shadowColor = C.glow; ctx.shadowBlur = 15 * z; ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 2.5);
-        ctx.fillStyle = C.current; ctx.beginPath(); ctx.arc(cx, ry, rz, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
-      } else if (monthIdx < monthsPassed) {
-        ctx.fillStyle = C.lived; ctx.beginPath(); ctx.arc(cx, ry, rz, 0, Math.PI * 2); ctx.fill();
-      } else {
-        ctx.strokeStyle = C.futureStroke; ctx.lineWidth = 1.5 * z;
-        ctx.beginPath(); ctx.arc(cx, ry, rz, 0, Math.PI * 2); ctx.stroke();
-      }
-    }
-  }
-}
-
-// ════ YEARS (diamonds, 10 cols × 9 rows) ═════════════════════
-function drawYears(ctx: CanvasRenderingContext2D, p: any, t: number, z: number, cw: number) {
-  const C = C_YEARS;
-  const sz = Y_SIZE * z, gz = Y_GAP * z, step = sz + gz, lw = Y_LBL * z, half = sz / 2;
-  const tw = lw + Y_COLS * step;
-  const cx0 = Math.max(16, (cw - tw) / 2);
-  const yearsPassed = Math.floor(p.weeksPassed / 52);
-  const totalRows = Math.ceil(p.totalYears / Y_COLS);
-
-  for (let row = 0; row < totalRows; row++) {
-    const ry = row * step + half + 4 * z;
-
-    if (p.hudVisible) {
-      ctx.font = `600 ${Math.max(9, 12 * z)}px system-ui`; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-      ctx.fillStyle = LABEL_BRIGHT;
-      ctx.fillText(`${row * Y_COLS}s`, cx0 + lw - 6 * z, ry);
-    }
-
-    for (let col = 0; col < Y_COLS; col++) {
-      const yearIdx = row * Y_COLS + col;
-      if (yearIdx >= p.totalYears) break;
-      const cx = cx0 + lw + col * step + half;
-      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-
-      ctx.save(); ctx.translate(cx, ry); ctx.rotate(Math.PI / 4);
-      if (yearIdx === yearsPassed) {
-        ctx.shadowColor = C.glow; ctx.shadowBlur = 20 * z; ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 2);
-        ctx.fillStyle = C.current; ctx.fillRect(-half, -half, sz, sz);
-        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
-      } else if (yearIdx < yearsPassed) {
-        ctx.fillStyle = C.lived; ctx.fillRect(-half, -half, sz, sz);
-      } else {
-        ctx.strokeStyle = C.futureStroke; ctx.lineWidth = 2 * z;
-        ctx.strokeRect(-half, -half, sz, sz);
-      }
-      ctx.restore();
-    }
-  }
-}
 
 export default ResonanceCanvas;
