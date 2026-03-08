@@ -7,7 +7,7 @@ import type { LifeStats, DiaryMap, SelectedWeek, HoverInfo } from "../types";
 import type { AppMode } from "../lib/theme";
 import type { FullDiaryEntry } from "../hooks/useDiary";
 import type { MoodEntry } from "../hooks/useMood";
-import ResonanceCanvas from "./ResonanceCanvas";
+import ResonanceCanvas, { type GridMode } from "./ResonanceCanvas";
 import LifeBattery from "./LifeBattery";
 import WeekModal from "./WeekModal";
 import LegacySnapshot from "./LegacySnapshot";
@@ -36,6 +36,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   const [hudVisible, setHudVisible] = useState(true);
   const [immersive, setImmersive] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [gridMode, setGridMode] = useState<GridMode>("weeks");
   const [hoverInfo] = useState<HoverInfo | null>(null);
   const hudTimerRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -143,6 +144,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
             offsetX={x.get()}
             offsetY={y.get()}
             mode={mode}
+            gridMode={gridMode}
             hudVisible={hudVisible}
             onWeekSelect={openDiary}
           />
@@ -158,6 +160,21 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
                 <div className={`flex items-center gap-3 ${controlCls} rounded-xl px-3 py-2 pointer-events-auto`}>
                   <LifeBattery percentUsed={pct} size="sm" />
                 </div>
+
+                {/* Mode switcher */}
+                <div className="bg-white/[0.08] border border-white/[0.15] rounded-2xl p-1 flex pointer-events-auto">
+                  {(["weeks", "months", "years"] as GridMode[]).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => { setGridMode(m); api.start({ zoom: 0.85, x: 0, y: 0 }); }}
+                      className={`px-4 sm:px-5 py-1.5 rounded-xl text-xs font-medium transition-all capitalize
+                        ${gridMode === m ? "bg-white/20 text-white font-semibold" : "text-white/50 hover:text-white/80"}`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+
                 <div className={`flex items-center gap-3 ${controlDimCls} rounded-xl px-3 py-2 text-xs pointer-events-auto`}>
                   <span>Wk <strong className="text-white">{lifeStats.currentWeekInYear}</strong></span>
                   <span>Yr <strong className="text-white">{lifeStats.currentYearOfLife}</strong></span>

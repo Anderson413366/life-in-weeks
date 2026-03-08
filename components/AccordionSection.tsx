@@ -15,14 +15,14 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, defaul
     <div className="w-full">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-1 py-3 group"
+        className="w-full flex items-center justify-between bg-white/[0.08] border border-white/[0.15] rounded-2xl px-6 py-4 group hover:bg-white/[0.12] hover:border-white/25 transition-all"
       >
         <div className="flex items-center gap-3">
           <span className="text-lg">{icon}</span>
-          <h2 className="text-lg sm:text-xl font-semibold text-primary tracking-wide">{title}</h2>
+          <span className="text-white font-semibold text-base">{title}</span>
         </div>
         <motion.span
-          className="text-text-muted/40 text-sm"
+          className="text-white text-sm"
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
@@ -38,7 +38,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({ title, icon, defaul
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="pb-4">{children}</div>
+            <div className="pt-3 pb-1">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
