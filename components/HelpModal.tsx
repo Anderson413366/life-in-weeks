@@ -25,7 +25,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
         onClick={onClose}
       >
         <motion.div
-          className="bg-[#0d1b2e] border border-[#1e3a5f] rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
+          className="card-base rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl"
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9 }}
@@ -48,7 +48,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => (
 
           <button
             onClick={onClose}
-            className="mt-6 w-full bg-[#1e3a5f] text-white rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-[#2a5298] transition-colors"
+            className="mt-6 w-full bg-[rgba(120,80,200,0.2)] text-white rounded-xl px-6 py-2.5 text-sm font-medium hover:bg-[rgba(120,80,200,0.35)] transition-colors border border-[rgba(120,80,200,0.2)]"
           >
             Close
           </button>

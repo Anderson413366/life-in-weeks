@@ -57,8 +57,8 @@ const MOODS = [
 ];
 
 // Solid card styles — NO translucent whites
-const CARD = "bg-[#0d1b2e] border border-[#1e3a5f] rounded-3xl";
-const CARD_SHADOW = "0 0 40px rgba(0,212,255,0.06)";
+const CARD = "card-base";
+const CARD_SHADOW = "none"; // shadow is now in the .card-base CSS class
 
 interface DashboardPageProps {
   lifeStats: LifeStats;
@@ -157,7 +157,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           transition={{ duration: pulseDuration, repeat: Infinity, ease: "easeInOut" }}
         >
           <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 280 280">
-            <circle cx="140" cy="140" r="125" fill="none" stroke="#1e3a5f" strokeWidth="12" />
+            <circle cx="140" cy="140" r="125" fill="none" stroke="rgba(120,80,200,0.15)" strokeWidth="12" />
             <motion.circle
               cx="140" cy="140" r="125" fill="none"
               stroke="url(#hero-ring-grad)" strokeWidth="12" strokeLinecap="round"
@@ -182,20 +182,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Badges — solid navy, cyan accents */}
         <div className="flex flex-wrap justify-center gap-2 mt-5">
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#00d4ff]/40 text-[#00d4ff]">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[rgba(22,18,38,0.9)] border border-[#00d4ff]/40 text-[#00d4ff]">
             Week {lifeStats.currentWeekInYear} · Year {lifeStats.currentYearOfLife}
           </span>
           {generation && (
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#bf5fff]/40 text-[#bf5fff]">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[rgba(22,18,38,0.9)] border border-[#bf5fff]/40 text-[#bf5fff]">
               {generation.emoji} {generation.name}
             </span>
           )}
           {zodiac && (
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#00d4ff]/40 text-[#00d4ff]">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[rgba(22,18,38,0.9)] border border-[#00d4ff]/40 text-[#00d4ff]">
               {zodiac.symbol} {zodiac.name}
             </span>
           )}
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#ffd700]/40 text-[#ffd700]">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[rgba(22,18,38,0.9)] border border-[#ffd700]/40 text-[#ffd700]">
             {chinese.emoji} {chinese.animal}
           </span>
         </div>
@@ -203,7 +203,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="flex flex-col items-center gap-3 mt-5">
           <LifeBattery percentUsed={pct} size="md" />
           <button onClick={() => setShowSnapshot(true)}
-            className="px-4 py-1.5 rounded-full text-xs bg-[#0d1b2e] border border-[#1e3a5f] text-white/90 hover:text-white hover:border-[#00d4ff]/60 transition-all">
+            className="px-4 py-1.5 rounded-full text-xs card-base text-white/90 hover:text-white hover:border-[#00d4ff]/60 transition-all">
             📸 Share Snapshot
           </button>
           <QuoteBlock quote={quote} />
@@ -265,7 +265,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             );
           })()}
           {recentMoods.length > 1 && (
-            <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-[#1e3a5f]">
+            <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-[rgba(120,80,200,0.15)]">
               {recentMoods.slice(0, 7).map((m) => <span key={m.date} className="text-lg" title={m.date}>{m.mood}</span>)}
             </div>
           )}
@@ -298,9 +298,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           <div className="flex gap-3 overflow-x-auto pb-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className={`${CARD} min-w-[140px] max-w-[140px] p-4 animate-pulse`}>
-                <div className="w-8 h-8 bg-[#1e3a5f] rounded-full mb-2" />
-                <div className="w-full h-3 bg-[#1e3a5f] rounded mb-1" />
-                <div className="w-2/3 h-2 bg-[#1e3a5f] rounded" />
+                <div className="w-8 h-8 bg-[rgba(120,80,200,0.15)] rounded-full mb-2" />
+                <div className="w-full h-3 bg-[rgba(120,80,200,0.15)] rounded mb-1" />
+                <div className="w-2/3 h-2 bg-[rgba(120,80,200,0.15)] rounded" />
               </div>
             ))}
           </div>
@@ -313,7 +313,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               <div key={p.name} className={`${CARD} min-w-[140px] max-w-[140px] p-4 shrink-0`}>
                 <div className="text-3xl mb-2">{p.emoji}</div>
                 <div className="text-white font-bold text-sm leading-tight">{p.name}</div>
-                <div className="mt-1"><span className="bg-[#1e3a5f] text-[#00d4ff] text-[0.5rem] uppercase tracking-wide rounded-full px-2 py-0.5 font-semibold">{p.field}</span></div>
+                <div className="mt-1"><span className="bg-[rgba(120,80,200,0.15)] text-[#00d4ff] text-[0.5rem] uppercase tracking-wide rounded-full px-2 py-0.5 font-semibold">{p.field}</span></div>
                 <div className="text-white/60 text-xs mt-1">{p.born} – {p.died ?? "alive"}</div>
                 <div className="text-white/85 text-xs leading-snug mt-1">{p.tagline}</div>
               </div>
@@ -444,15 +444,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               <button key={p} onClick={() => horoscope.fetch(p)}
                 className="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize"
                 style={{
-                  background: horoscope.activePeriod === p && horoscope.result ? "linear-gradient(135deg, #00d4ff, #ec4899)" : "#0d1b2e",
+                  background: horoscope.activePeriod === p && horoscope.result ? "linear-gradient(135deg, #00d4ff, #ec4899)" : "rgba(22,18,38,0.9)",
                   color: horoscope.activePeriod === p && horoscope.result ? "#fff" : "#00d4ff",
-                  border: `1px solid ${horoscope.activePeriod === p && horoscope.result ? "transparent" : "#1e3a5f"}`,
+                  border: `1px solid ${horoscope.activePeriod === p && horoscope.result ? "transparent" : "rgba(120,80,200,0.2)"}`,
                 }}>
                 {p === "today" ? "Today" : p === "week" ? "This Week" : "This Year"}
               </button>
             ))}
           </div>
-          {horoscope.loading && <div className="flex flex-col items-center gap-3 py-6 animate-pulse"><div className="w-24 h-8 bg-[#1e3a5f] rounded-xl" /><div className="w-full h-16 bg-[#1e3a5f] rounded-xl" /></div>}
+          {horoscope.loading && <div className="flex flex-col items-center gap-3 py-6 animate-pulse"><div className="w-24 h-8 bg-[rgba(120,80,200,0.15)] rounded-xl" /><div className="w-full h-16 bg-[rgba(120,80,200,0.15)] rounded-xl" /></div>}
           {horoscope.error === "no-key" && <p className="text-center text-sm text-white/60 py-4">Add your AI key in Settings to unlock your horoscope.</p>}
           {horoscope.error && horoscope.error !== "no-key" && <p className="text-center text-sm text-amber-400 py-4">⚠️ {horoscope.error}</p>}
           {horoscope.result && !horoscope.loading && (

@@ -34,7 +34,7 @@ const ExactAgeTicker: React.FC<ExactAgeTickerProps> = ({ birthDate, birthYear })
         {UNITS.map((u, i) => (
           <motion.div
             key={u.key}
-            className="bg-[#0d1b2e] border border-[#1e3a5f] rounded-lg p-3 sm:p-4 min-w-[50px] sm:min-w-[68px] text-center overflow-hidden"
+            className="card-base rounded-lg p-3 sm:p-4 min-w-[50px] sm:min-w-[68px] text-center overflow-hidden"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, duration: 0.4 }}

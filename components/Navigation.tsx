@@ -21,7 +21,7 @@ const tabs: { id: Page; label: string; icon: string }[] = [
 const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate, greeting, avatarUrl }) => (
   <nav className="flex flex-col items-center w-full max-w-7xl mx-auto mb-4 sm:mb-6 gap-2">
     {/* Centered tab bar */}
-    <div className="flex gap-0.5 sm:gap-1 p-1 bg-[#0d1b2e] border border-[#1e3a5f] rounded-xl overflow-x-auto">
+    <div className="flex gap-0.5 sm:gap-1 p-1 card-base rounded-xl overflow-x-auto">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -50,7 +50,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate, greeti
         {avatarUrl ? (
           <img src={avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover border border-[#1e3a5f]" />
         ) : greeting ? (
-          <div className="w-6 h-6 rounded-full bg-[#0d1b2e] border border-[#1e3a5f] flex items-center justify-center text-[0.55rem] text-[#00d4ff] font-bold">
+          <div className="w-6 h-6 rounded-full card-base flex items-center justify-center text-[0.55rem] text-[#00d4ff] font-bold">
             {greeting[0].toUpperCase()}
           </div>
         ) : null}

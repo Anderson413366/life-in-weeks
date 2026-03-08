@@ -66,7 +66,7 @@ const AIInsightBanner: React.FC<AIInsightBannerProps> = ({ mode, lifeStats, toda
     <AnimatePresence>
       <motion.div
         className={`mx-auto max-w-2xl px-5 py-3 rounded-2xl border text-center
-          ${isFocus ? "border-[#333] bg-[#111]" : "border-[#00d4ff]/30 bg-[#0d1b2e]"}`}
+          ${isFocus ? "border-[#333] bg-[#111]" : "border-[#00d4ff]/30 card-base"}`}
         style={{ boxShadow: "0 0 30px rgba(0,212,255,0.06)" }}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
