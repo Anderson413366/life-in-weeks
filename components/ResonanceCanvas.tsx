@@ -7,6 +7,7 @@ export type GridMode = "weeks" | "months" | "years";
 interface ResonanceCanvasProps {
   weeksPassed: number;
   totalYears: number;
+  birthYear: number;
   diaryEntries: DiaryMap;
   zoom: number;
   offsetX: number;
@@ -31,6 +32,8 @@ interface ModeConfig {
   unitsPassed: number;
   labelEvery: number;
   labelMultiplier: number;
+  showYearInCell: boolean;
+  birthYear: number;
 }
 
 export function getGridColors(gm: GridMode) {
@@ -41,11 +44,13 @@ export function getGridColors(gm: GridMode) {
 
 const BG = "#080818";
 const LABEL_BASE = 36;
-const TOP_PAD_BASE = 16;
+const TOP_PAD_BASE = 8;
 
-function buildConfig(p: { weeksPassed: number; totalYears: number }, gm: GridMode): ModeConfig {
+function buildConfig(p: { weeksPassed: number; totalYears: number; birthYear: number }, gm: GridMode): ModeConfig {
+  const base = { birthYear: p.birthYear, showYearInCell: false };
   if (gm === "months") {
     return {
+      ...base,
       cols: 12, rows: p.totalYears, cell: 18, gap: 3,
       colorLived: "#00ff9d", colorCurrent: "#ff6b00", colorGlow: "rgba(255,107,0,0.7)",
       colorFuture: "rgba(0,255,157,0.07)", colorFutureStroke: "rgba(0,255,157,0.25)",
@@ -55,16 +60,19 @@ function buildConfig(p: { weeksPassed: number; totalYears: number }, gm: GridMod
   }
   if (gm === "years") {
     return {
-      cols: 10, rows: Math.ceil(p.totalYears / 10), cell: 36, gap: 3,
+      ...base,
+      cols: 10, rows: Math.ceil(p.totalYears / 10), cell: 40, gap: 4,
       colorLived: "#bf5fff", colorCurrent: "#ffd700", colorGlow: "rgba(255,215,0,0.7)",
       colorFuture: "rgba(191,95,255,0.08)", colorFutureStroke: "rgba(191,95,255,0.35)",
       totalUnits: p.totalYears, unitsPassed: Math.floor(p.weeksPassed / 52),
       labelEvery: 1, labelMultiplier: 10,
+      showYearInCell: true,
     };
   }
-  // weeks
+  // weeks — smaller cells so full grid is visible
   return {
-    cols: 52, rows: p.totalYears, cell: 11, gap: 3,
+    ...base,
+    cols: 52, rows: p.totalYears, cell: 10, gap: 2,
     colorLived: "#00d4ff", colorCurrent: "#ec4899", colorGlow: "rgba(236,72,153,0.7)",
     colorFuture: "rgba(0,212,255,0.07)", colorFutureStroke: "rgba(0,212,255,0.2)",
     totalUnits: p.totalYears * 52, unitsPassed: p.weeksPassed,
@@ -72,32 +80,26 @@ function buildConfig(p: { weeksPassed: number; totalYears: number }, gm: GridMod
   };
 }
 
-// ═══════════════════════════════════════════════════════════════
-// UNIFIED DRAW — one function for all three modes
-// ═══════════════════════════════════════════════════════════════
 function drawGrid(
   ctx: CanvasRenderingContext2D,
-  _offsetX: number, offsetY: number,
-  t: number, z: number, w: number,
+  offsetY: number,
+  t: number, z: number, w: number, h: number,
   cfg: ModeConfig, diaryEntries: DiaryMap, hudVisible: boolean,
 ) {
-  const { cols, rows, cell, gap, colorLived, colorCurrent, colorGlow, colorFuture, colorFutureStroke, unitsPassed, totalUnits, labelEvery, labelMultiplier } = cfg;
+  const { cols, rows, cell, gap, colorLived, colorCurrent, colorGlow, colorFuture, colorFutureStroke, unitsPassed, totalUnits, labelEvery, labelMultiplier, showYearInCell, birthYear } = cfg;
   const cz = cell * z;
   const gz = gap * z;
   const step = cz + gz;
   const lw = LABEL_BASE * z;
   const topPad = TOP_PAD_BASE * z;
   const totalW = lw + cols * step;
-  const cx0 = Math.max(16 * z, (w - totalW) / 2);
-
-  // Viewport culling
-  void offsetY;
+  const cx0 = Math.max(8 * z, (w - totalW) / 2);
 
   for (let row = 0; row < rows; row++) {
     const ry = topPad + row * step;
 
     // Row culling
-    if (ry + offsetY > w + step) break;
+    if (ry + offsetY > h + step) break;
     if (ry + cz + offsetY < -step) continue;
 
     // Year label
@@ -125,7 +127,6 @@ function drawGrid(
       ctx.shadowBlur = 0;
 
       if (idx === unitsPassed) {
-        // Current — glowing
         const pulse = 0.75 + 0.25 * Math.sin(t * 2.5);
         ctx.shadowColor = colorGlow;
         ctx.shadowBlur = 14 * z;
@@ -137,13 +138,11 @@ function drawGrid(
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       } else if (idx < unitsPassed) {
-        // Lived — solid
         ctx.fillStyle = colorLived;
         ctx.beginPath();
         ctx.roundRect(cx, ry, cz, cz, Math.max(2, 3 * z));
         ctx.fill();
       } else {
-        // Future — dim fill + stroke
         ctx.fillStyle = colorFuture;
         ctx.beginPath();
         ctx.roundRect(cx, ry, cz, cz, Math.max(2, 3 * z));
@@ -153,8 +152,21 @@ function drawGrid(
         ctx.stroke();
       }
 
+      // Year number inside cell (years mode only)
+      if (showYearInCell && cz > 20) {
+        const yearValue = birthYear + idx;
+        const fs = Math.max(7, Math.min(12, 10 * z));
+        ctx.font = `700 ${fs}px system-ui, -apple-system, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = idx <= unitsPassed ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.25)";
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
+        ctx.fillText(String(yearValue), cx + cz / 2, ry + cz / 2);
+      }
+
       // Diary dot (weeks mode only)
-      if (cfg.cols === 52 && diaryEntries[idx.toString()]) {
+      if (cols === 52 && diaryEntries[idx.toString()]) {
         ctx.beginPath();
         ctx.arc(cx + cz / 2, ry + cz / 2, Math.max(1.5, 2 * z), 0, Math.PI * 2);
         ctx.fillStyle = "#fbbf24";
@@ -166,9 +178,6 @@ function drawGrid(
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// COMPONENT
-// ═══════════════════════════════════════════════════════════════
 const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef(0);
@@ -193,15 +202,14 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Background
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, w, h);
 
     ctx.save();
     ctx.translate(p.offsetX, p.offsetY);
 
-    const cfg = buildConfig({ weeksPassed: p.weeksPassed, totalYears: p.totalYears }, p.gridMode);
-    drawGrid(ctx, p.offsetX, p.offsetY, time / 1000, p.zoom, w, cfg, p.diaryEntries, p.hudVisible);
+    const cfg = buildConfig({ weeksPassed: p.weeksPassed, totalYears: p.totalYears, birthYear: p.birthYear }, p.gridMode);
+    drawGrid(ctx, p.offsetY, time / 1000, p.zoom, w, h, cfg, p.diaryEntries, p.hudVisible);
 
     ctx.restore();
   }, []);
@@ -213,7 +221,6 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
     return () => { active = false; cancelAnimationFrame(rafRef.current); };
   }, [draw]);
 
-  // ── Hit testing ────────────────────────────────────────────
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -224,12 +231,12 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
     const z = p.zoom;
     const w = canvas.clientWidth;
 
-    const cfg = buildConfig({ weeksPassed: p.weeksPassed, totalYears: p.totalYears }, p.gridMode);
+    const cfg = buildConfig({ weeksPassed: p.weeksPassed, totalYears: p.totalYears, birthYear: p.birthYear }, p.gridMode);
     const cz = cfg.cell * z, gz = cfg.gap * z, step = cz + gz;
     const lw = LABEL_BASE * z;
     const topPad = TOP_PAD_BASE * z;
     const totalW = lw + cfg.cols * step;
-    const cx0 = Math.max(16 * z, (w - totalW) / 2);
+    const cx0 = Math.max(8 * z, (w - totalW) / 2);
 
     const col = Math.floor((mx - cx0) / step);
     const row = Math.floor((my - topPad) / step);
@@ -238,7 +245,6 @@ const ResonanceCanvas: React.FC<ResonanceCanvasProps> = (props) => {
     const idx = row * cfg.cols + col;
     if (idx > cfg.unitsPassed) return;
 
-    // Convert to week index for the diary
     let weekIdx = idx;
     if (p.gridMode === "months") weekIdx = Math.floor(idx * 52 / 12);
     else if (p.gridMode === "years") weekIdx = idx * 52;

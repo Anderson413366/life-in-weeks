@@ -44,7 +44,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   const [{ zoom, x, y }, api] = useSpring(() => ({
     zoom: 1,
     x: 0,
-    y: 40, // start at y=40 so content is just below the switcher
+    y: 0,
     config: { mass: 0.8, tension: 200, friction: 28 },
   }));
 
@@ -110,7 +110,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   return (
     <>
       <motion.div
-        className={`${immersive ? "fixed inset-0 z-50" : "relative w-screen -ml-[calc((100vw-100%)/2)]"}`}
+        className={`${immersive ? "fixed inset-0 z-50" : "relative w-full"}`}
         style={immersive ? undefined : { height: "calc(100vh - 64px)", minHeight: 400 }}
         layout
         transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -120,11 +120,12 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
           ref={containerRef}
           {...bind()}
           className={`absolute left-0 right-0 bottom-0 overflow-hidden ${isFocus ? "bg-black" : "bg-[#080818]"}`}
-          style={{ touchAction: "none", top: "60px" }}
+          style={{ touchAction: "none", top: "80px" }}
         >
           <ResonanceCanvas
             weeksPassed={lifeStats.weeksPassed}
             totalYears={lifeExpectancy}
+            birthYear={parseInt(birthdate.split("-")[0], 10)}
             diaryEntries={diaryEntries}
             zoom={zoom.get()}
             offsetX={x.get()}
@@ -141,7 +142,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
               {(["weeks", "months", "years"] as GridMode[]).map((m) => (
                 <button
                   key={m}
-                  onClick={() => { setGridMode(m); api.start({ zoom: 1, x: 0, y: 40, immediate: true }); flashHud(); }}
+                  onClick={() => { setGridMode(m); api.start({ zoom: 1, x: 0, y: 0, immediate: true }); flashHud(); }}
                   className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-semibold transition-all
                     ${gridMode === m
                       ? "bg-gradient-to-r from-cyan-500 to-pink-500 text-white shadow-lg"
@@ -192,7 +193,7 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium ${controlCls}`}>+</button>
             <button onClick={() => { api.start({ zoom: Math.max(0.3, zoom.get() - 0.5) }); flashHud(); }}
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium ${controlCls}`}>−</button>
-            <button onClick={() => { api.start({ zoom: 1, x: 0, y: 40 }); flashHud(); }}
+            <button onClick={() => { api.start({ zoom: 1, x: 0, y: 0 }); flashHud(); }}
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-[0.6rem] ${controlDimCls}`}>⟳</button>
           </div>
 
@@ -238,6 +239,22 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Instruction hint — auto-fades after 3s */}
+          <motion.div
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ delay: 2.5, duration: 1 }}
+          >
+            <div className="bg-black/60 backdrop-blur-sm border border-white/15 rounded-full px-4 py-2 text-white/60 text-xs flex items-center gap-2">
+              <span>↕ Scroll</span>
+              <span className="w-px h-3 bg-white/20" />
+              <span>⟷ Drag</span>
+              <span className="w-px h-3 bg-white/20" />
+              <span>🤏 Pinch to zoom</span>
+            </div>
+          </motion.div>
         </div>
       </motion.div>
 
