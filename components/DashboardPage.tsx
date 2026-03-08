@@ -13,6 +13,7 @@ import MoodChecker from "./MoodChecker";
 import StatCard from "./StatCard";
 import DataCard from "./DataCard";
 import SectionHeading from "./SectionHeading";
+import AccordionSection from "./AccordionSection";
 import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
 import AIInsightBanner from "./AIInsightBanner";
@@ -83,6 +84,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
           birthYear={birthYear}
           birthMonth={birthMonth}
           birthDay={birthDay}
+          heartRate={averages.avg_heartbeats_per_min}
+          mode={mode}
+          moodColor={isLowMood ? "#f43f5e" : undefined}
         />
         <div className="mt-4 flex flex-col items-center gap-2">
           <span className="text-[0.6rem] text-text-muted/60 uppercase tracking-wider">Life Remaining</span>
@@ -151,7 +155,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
 
       {/* ── Body & Biology ───────────────────────────────────── */}
       <motion.section custom={5} initial="hidden" animate="visible" variants={section}>
-        <SectionHeading title="Body & Biology" />
+        <AccordionSection title="Body & Biology" icon="💓" defaultOpen>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <DataCard icon="💓" value={biology.heartbeats}  label="Heartbeats"      sublabel={`~${averages.avg_heartbeats_per_min} bpm`}   color="#ff6b6b" index={0} />
           <DataCard icon="🌬️" value={biology.breaths}    label="Breaths Taken"   sublabel={`~${averages.avg_breaths_per_min}/min`}    color="#00d4ff" index={1} />
@@ -160,11 +164,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
           <DataCard icon="🍽️" value={numbers.mealsEaten} label="Meals Eaten"     sublabel={`~${averages.meals_per_day}/day`}        color="#ff9f43" index={4} />
           <DataCard icon="😄" value={numbers.laughs}     label="Times Laughed"   sublabel={`~${averages.avg_laughs_per_day}/day`}       color="#ffd700" index={5} />
         </div>
+        </AccordionSection>
       </motion.section>
 
       {/* ── Cosmic Perspective ───────────────────────────────── */}
       <motion.section custom={6} initial="hidden" animate="visible" variants={section}>
-        <SectionHeading title="Cosmic Perspective" />
+        <AccordionSection title="Cosmic Perspective" icon="🌍">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <DataCard icon="🌍" value={cosmic.orbitsAroundSun}  label="Orbits Around the Sun"  color="#4caf50" index={0} />
           <DataCard icon="🚀" value={`${(cosmic.distanceThroughSpaceMiles / 1_000_000_000).toFixed(1)}B mi`} label="Distance Through Space" sublabel={`${(cosmic.distanceThroughSpaceKm / 1_000_000_000).toFixed(1)}B km at 67,000 mph`} color="#00d4ff" index={1} />
@@ -173,11 +178,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
           <DataCard icon="🍂" value={cosmic.seasonsExperienced} label="Seasons Experienced"  sublabel="spring, summer, fall, winter" color="#4caf50" index={4} />
           <DataCard icon="🚶" value={numbers.stepsTaken}      label="Steps Taken"            sublabel="~7,500 per day" color="#8e44ad" index={5} />
         </div>
+        </AccordionSection>
       </motion.section>
 
       {/* ── Life in Numbers ──────────────────────────────────── */}
       <motion.section custom={7} initial="hidden" animate="visible" variants={section}>
-        <SectionHeading title="Life in Numbers" />
+        <AccordionSection title="Life in Numbers" icon="📊">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <DataCard icon="💬" value={numbers.wordsSpoken} label="Words Spoken"     sublabel="~16,000 per day" color="#00d4ff" index={0} />
           <DataCard icon="💭" value={numbers.dreamsHad}   label="Dreams Had"       sublabel="~4 per night"    color="#8e44ad" index={1} />
@@ -186,11 +192,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
           <DataCard icon="😴" value={`${timeSpent.sleepingYears} yrs`}   label="Time Sleeping" sublabel="~8 hrs/day"        color="#2196F3" index={4} />
           <DataCard icon="🌟" value={`${lifeStats.weeksPassed} / ${lifeStats.totalLifeWeeks}`} label="Weeks Used" sublabel={`${(100 - pct).toFixed(1)}% still ahead`} color="#4caf50" index={5} />
         </div>
+        </AccordionSection>
       </motion.section>
 
       {/* ── Your Age on Other Planets ────────────────────────── */}
       <motion.section custom={8} initial="hidden" animate="visible" variants={section}>
-        <SectionHeading title="Your Age on Other Planets" />
+        <AccordionSection title="Your Age on Other Planets" icon="🪐">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {[
             { icon: "☿", name: "Mercury", value: altAges.mercuryYears, color: "#b4b4c7" },
@@ -213,6 +220,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
             </motion.div>
           ))}
         </div>
+        </AccordionSection>
       </motion.section>
 
       {/* ── Waking Life ──────────────────────────────────────── */}

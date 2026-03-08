@@ -153,10 +153,42 @@ const DiaryPage: React.FC<DiaryPageProps> = ({ fullEntries, diaryEntries, birthd
 
       {/* Entries */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-5xl opacity-20 mb-4">📝</div>
-          <p className="text-text-muted">{search ? "No entries match your search." : "No diary entries yet."}</p>
-          <p className="text-xs text-text-muted/50 mt-1">Click "+ New Entry" to start writing about your life.</p>
+        <div className="flex flex-col items-center justify-center py-16 gap-6">
+          {search ? (
+            <>
+              <div className="text-5xl opacity-20">🔍</div>
+              <p className="text-text-muted">No entries match "{search}"</p>
+            </>
+          ) : (
+            <>
+              {/* Large voice journal CTA */}
+              <motion.div
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <motion.button
+                  onClick={() => { setShowNewEntry(true); }}
+                  className="w-24 h-24 rounded-full flex items-center justify-center text-4xl shadow-2xl"
+                  style={{
+                    background: "linear-gradient(135deg, #00d4ff, #8e44ad, #ff6b6b)",
+                    boxShadow: "0 0 40px rgba(0,212,255,0.2), 0 0 80px rgba(142,68,173,0.1)",
+                  }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{ scale: [1, 1.03, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  ✍️
+                </motion.button>
+                <div className="text-center">
+                  <p className="text-white font-medium text-lg">Start Your Story</p>
+                  <p className="text-text-muted/60 text-sm mt-1">Your life deserves to be documented.</p>
+                  <p className="text-text-muted/40 text-xs mt-0.5">Write, speak, or snap a photo — it all starts here.</p>
+                </div>
+              </motion.div>
+            </>
+          )}
         </div>
       ) : viewMode === "card" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
