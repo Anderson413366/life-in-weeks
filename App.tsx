@@ -16,6 +16,7 @@ import ResonanceGrid from "./components/ResonanceGrid";
 import DiaryPage from "./components/DiaryPage";
 import SettingsPage from "./components/SettingsPage";
 import VoiceJournalButton from "./components/VoiceJournalButton";
+import FluidBackground from "./components/FluidBackground";
 
 const App: React.FC = () => {
   const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
@@ -50,6 +51,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`flex flex-col items-center w-full min-h-screen p-4 sm:p-5 md:p-6 ${mode === "focus" ? "bg-black" : ""}`}>
+      <FluidBackground mode={mode} todayMood={todayMood} />
       <div className="w-full max-w-7xl flex flex-col gap-4 sm:gap-6 text-center">
         <Navigation currentPage={page} onNavigate={setPage} greeting={profile.greeting} avatarUrl={profile.avatarUrl} />
 

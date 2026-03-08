@@ -15,6 +15,7 @@ import DataCard from "./DataCard";
 import SectionHeading from "./SectionHeading";
 import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
+import AIInsightBanner from "./AIInsightBanner";
 import type { MoodEntry } from "../hooks/useMood";
 import type { AppMode } from "../lib/theme";
 
@@ -90,6 +91,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ lifeStats, dynamicStats, 
       <motion.section custom={1} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Daily Check-In" />
         <MoodChecker todayMood={todayMood} recentMoods={recentMoods} onSave={onSaveMood} />
+      </motion.section>
+
+      {/* ── AI Insight ────────────────────────────────────────── */}
+      <motion.section custom={2} initial="hidden" animate="visible" variants={section}>
+        <AIInsightBanner mode={mode} lifeStats={lifeStats} todayMood={todayMood} />
       </motion.section>
 
       {/* ── Your Exact Age ───────────────────────────────────── */}
