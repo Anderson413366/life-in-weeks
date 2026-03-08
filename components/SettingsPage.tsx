@@ -201,9 +201,23 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               </button>
             </div>
           </FieldRow>
-          <p className="text-[0.65rem] text-text-muted/60 ml-0 sm:ml-44">
-            Your key is stored securely in your account. It powers diary reflection prompts and entry analysis. Get a free key at aistudio.google.com.
-          </p>
+          <div className="ml-0 sm:ml-44 space-y-2">
+            <p className="text-[0.65rem] text-white/40">
+              Your key is stored securely and never shared. It powers horoscope, diary AI, and famous birthdays.
+            </p>
+            <details className="text-[0.65rem] text-white/30">
+              <summary className="text-[#00d4ff] cursor-pointer hover:text-[#00d4ff]/80 transition-colors font-semibold">
+                📘 How to get a free Gemini API key
+              </summary>
+              <ol className="mt-2 ml-4 space-y-1.5 text-white/50 list-decimal">
+                <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-[#00d4ff] underline">aistudio.google.com/apikey</a></li>
+                <li>Sign in with your Google account</li>
+                <li>Click <strong className="text-white/70">"Create API Key"</strong></li>
+                <li>Copy the key and paste it above</li>
+                <li>That's it — it's completely free for personal use!</li>
+              </ol>
+            </details>
+          </div>
         </div>
       </motion.section>
 
@@ -277,8 +291,35 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </motion.section>
 
-      {/* ── Account ──────────────────────────────────────────── */}
+      {/* ── Contact Us ────────────────────────────────────────── */}
       <motion.section custom={4} initial="hidden" animate="visible" variants={section}>
+        <SectionHeading title="Contact Us" />
+        <div className="card-base p-5 sm:p-6 space-y-3">
+          <p className="text-white/70 text-sm leading-relaxed">
+            Found a bug? Have an idea? We'd love to hear from you.
+          </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-lg">📧</span>
+              <a href="mailto:support@lifeinweeks.app" className="text-[#00d4ff] hover:underline">support@lifeinweeks.app</a>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-lg">💬</span>
+              <span className="text-white/50">DM us on X (Twitter): <a href="https://twitter.com/lifeinweeksapp" target="_blank" rel="noopener noreferrer" className="text-[#00d4ff] hover:underline">@lifeinweeksapp</a></span>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-lg">🐛</span>
+              <span className="text-white/50">Report bugs: <a href="https://github.com/Anderson413366/life-in-weeks/issues" target="_blank" rel="noopener noreferrer" className="text-[#00d4ff] hover:underline">GitHub Issues</a></span>
+            </div>
+          </div>
+          <p className="text-white/25 text-xs pt-2">
+            We typically respond within 24 hours. Your feedback directly shapes this app.
+          </p>
+        </div>
+      </motion.section>
+
+      {/* ── Account ──────────────────────────────────────────── */}
+      <motion.section custom={5} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Account" />
         <div className="glass rounded-xl p-5 sm:p-6 flex flex-col gap-4 items-center">
           <button

@@ -19,9 +19,11 @@ import TimeMirrorPage from "./components/TimeMirrorPage";
 import { getApiKey } from "./lib/ai";
 import VoiceJournalButton from "./components/VoiceJournalButton";
 import FluidBackground from "./components/FluidBackground";
+import Footer from "./components/Footer";
+import FeedbackPopup from "./components/FeedbackPopup";
 
 const App: React.FC = () => {
-  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, signInWithGoogle, signOut } = useAuth();
   const profile = useProfile(user?.id, user?.email);
   const { entries: diaryEntries, fullEntries, saveEntry } = useDiary(user?.id);
   const { lifeStats, dynamicStats } = useLifeStats(profile.birthdate, profile.lifeExpectancy);
@@ -39,7 +41,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!user) return <AuthGate onSignIn={signIn} onSignUp={signUp} />;
+  if (!user) return <AuthGate onSignIn={signIn} onSignUp={signUp} onGoogleSignIn={signInWithGoogle} />;
 
   if (profile.loading) {
     return (
@@ -150,6 +152,9 @@ const App: React.FC = () => {
       {hasBirthdate && (page === "dashboard" || page === "grid") && (
         <VoiceJournalButton birthdate={profile.birthdate} onSave={saveEntry} />
       )}
+
+      <Footer />
+      <FeedbackPopup userId={user?.id} />
     </div>
   );
 };
