@@ -123,16 +123,16 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
   return (
     <>
       <motion.div
-        className={`relative w-full ${immersive ? "fixed inset-0 z-50" : ""}`}
+        className={`${immersive ? "fixed inset-0 z-50" : "relative w-screen -ml-[calc((100vw-100%)/2)]"}`}
         style={immersive ? undefined : { height: "calc(100vh - 120px)", minHeight: 400 }}
         layout
         transition={{ duration: 0.4, ease: "easeInOut" }}
       >
-        {/* Canvas container */}
+        {/* Canvas container — full viewport width */}
         <div
           ref={containerRef}
           {...bind()}
-          className={`absolute inset-0 overflow-hidden ${immersive ? "" : "rounded-2xl"} border ${isFocus ? "border-[#222] bg-black" : "border-box-border/30 bg-[#060614]"}`}
+          className={`absolute inset-0 overflow-hidden ${isFocus ? "bg-black" : "bg-[#060614]"}`}
           style={{ touchAction: "none" }}
         >
           <ResonanceCanvas

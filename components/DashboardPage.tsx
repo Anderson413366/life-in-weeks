@@ -237,28 +237,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       </motion.section>
 
       {/* ════════════════════════════════════════════════════════
-          EXACT AGE (always visible — lightweight)
+          COLLAPSIBLE: Exact Age + Birthday + Life at a Glance
           ════════════════════════════════════════════════════════ */}
-      <motion.section {...fade(3)}>
-        <ExactAgeTicker birthDate={birthDate} birthYear={birthYear} />
-      </motion.section>
 
-      {/* ════════════════════════════════════════════════════════
-          BIRTHDAY COUNTDOWN
-          ════════════════════════════════════════════════════════ */}
-      <motion.section {...fade(4)}>
+      <AccordionSection title="Your Exact Age" icon="🕐">
+        <ExactAgeTicker birthDate={birthDate} birthYear={birthYear} />
+      </AccordionSection>
+
+      <AccordionSection title="Birthday Countdown" icon="🎂">
         <div className={`${GLASS} p-6 max-w-sm mx-auto text-center`}>
           <div className="text-3xl mb-2">🎂</div>
           <div className="text-4xl font-bold text-white counter-digits">{birthday.daysUntil}</div>
           <div className="text-[0.55rem] text-gray-500 uppercase tracking-[0.2em] mt-1">days until you turn {birthday.turningAge}</div>
           <div className="text-[0.5rem] text-gray-600 mt-1">{birthday.nextBirthdayDate}</div>
         </div>
-      </motion.section>
+      </AccordionSection>
 
-      {/* ════════════════════════════════════════════════════════
-          LIFE AT A GLANCE (4 tiles — always visible)
-          ════════════════════════════════════════════════════════ */}
-      <motion.section {...fade(5)}>
+      <AccordionSection title={isLowMood ? "Look How Far You've Come" : "Life at a Glance"} icon="📊">
         <div className="grid grid-cols-2 gap-3">
           <Stat value={lifeStats.daysPassed} label="Days Lived" />
           {isLowMood
@@ -269,7 +264,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             ? <Stat value={cosmic.sunrises} label="Sunrises You've Seen" />
             : <Stat value={lifeStats.weeksRemaining} label="Weeks Remaining" />}
         </div>
-      </motion.section>
+      </AccordionSection>
 
       {/* ════════════════════════════════════════════════════════
           COLLAPSIBLE DATA SECTIONS (progressive disclosure)
