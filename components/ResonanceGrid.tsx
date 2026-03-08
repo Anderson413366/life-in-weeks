@@ -9,7 +9,7 @@ import type { FullDiaryEntry } from "../hooks/useDiary";
 import type { MoodEntry } from "../hooks/useMood";
 import ResonanceCanvas from "./ResonanceCanvas";
 import LifeBattery from "./LifeBattery";
-import DiaryModal from "./DiaryModal";
+import WeekModal from "./WeekModal";
 import LegacySnapshot from "./LegacySnapshot";
 import HelpModal from "./HelpModal";
 import Tooltip from "./Tooltip";
@@ -226,9 +226,9 @@ const ResonanceGrid: React.FC<ResonanceGridProps> = ({
       )}
 
       <Tooltip hoverInfo={hoverInfo} />
-      <DiaryModal
-        isOpen={isModalOpen} onClose={closeDiary} selectedWeek={selectedWeek}
-        initialEntryText={currentEntry} initialPhotos={currentPhotos}
+      <WeekModal
+        isOpen={isModalOpen} onClose={closeDiary} week={selectedWeek}
+        initialEntry={currentEntry} initialPhotos={currentPhotos}
         userId={userId} onSave={onSaveDiary}
       />
       <LegacySnapshot
