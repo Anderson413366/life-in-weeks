@@ -57,24 +57,33 @@ const fade = (i: number) => ({
 });
 
 function Stat({ value, label }: { value: number | string; label: string; live?: boolean }) {
+  const display = typeof value === "number" ? value.toLocaleString() : value;
+  // Auto-shrink: use smaller font for long numbers so they never overflow
+  const len = display.length;
+  const sizeClass = len > 12 ? "text-lg sm:text-xl" : len > 9 ? "text-xl sm:text-2xl" : len > 6 ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl";
+
   return (
-    <div className={`${CARD} p-5 text-center`} style={{ boxShadow: CARD_SHADOW }}>
-      <div className="text-3xl sm:text-4xl font-black text-white counter-digits">
-        {typeof value === "number" ? value.toLocaleString() : value}
+    <div className={`${CARD} p-4 sm:p-5 text-center overflow-hidden min-w-0`} style={{ boxShadow: CARD_SHADOW }}>
+      <div className={`${sizeClass} font-black text-white counter-digits truncate`}>
+        {display}
       </div>
-      <div className="text-xs font-bold text-[#00d4ff] uppercase tracking-[0.2em] mt-1.5">{label}</div>
+      <div className="text-[0.55rem] sm:text-xs font-bold text-[#00d4ff] uppercase tracking-[0.15em] sm:tracking-[0.2em] mt-1.5 truncate">{label}</div>
     </div>
   );
 }
 
 function DataRow({ icon, value, label, sub }: { icon: string; value: string | number; label: string; sub?: string }) {
+  const display = typeof value === "number" ? value.toLocaleString() : value;
+  const len = display.length;
+  const sizeClass = len > 12 ? "text-base" : len > 9 ? "text-lg" : "text-xl";
+
   return (
-    <div className={`${CARD} p-4 flex items-center gap-4`} style={{ boxShadow: CARD_SHADOW }}>
+    <div className={`${CARD} p-4 flex items-center gap-3 overflow-hidden min-w-0`} style={{ boxShadow: CARD_SHADOW }}>
       <span className="text-2xl shrink-0">{icon}</span>
-      <div>
-        <div className="text-xl font-black text-white counter-digits">{typeof value === "number" ? value.toLocaleString() : value}</div>
-        <div className="text-xs font-bold text-[#00d4ff] uppercase tracking-[0.2em]">{label}</div>
-        {sub && <div className="text-xs text-white/60 mt-0.5">{sub}</div>}
+      <div className="min-w-0 flex-1">
+        <div className={`${sizeClass} font-black text-white counter-digits truncate`}>{display}</div>
+        <div className="text-[0.55rem] sm:text-xs font-bold text-[#00d4ff] uppercase tracking-[0.15em] truncate">{label}</div>
+        {sub && <div className="text-[0.55rem] text-white/60 mt-0.5 truncate">{sub}</div>}
       </div>
     </div>
   );
@@ -382,10 +391,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             { icon: "🐕", name: "Dog Yrs", val: altAges.dogYears },
             { icon: "🐈", name: "Cat Yrs", val: altAges.catYears },
           ].map((p) => (
-            <div key={p.name} className={`${CARD} p-3 text-center`}>
-              <div className="text-lg mb-0.5">{p.icon}</div>
-              <div className="text-base font-black text-white counter-digits">{p.val}</div>
-              <div className="text-[0.5rem] font-bold text-[#00d4ff] uppercase tracking-wider mt-0.5">{p.name}</div>
+            <div key={p.name} className={`${CARD} p-2 sm:p-3 text-center overflow-hidden min-w-0`}>
+              <div className="text-base sm:text-lg mb-0.5">{p.icon}</div>
+              <div className="text-sm sm:text-base font-black text-white counter-digits truncate">{p.val}</div>
+              <div className="text-[0.45rem] sm:text-[0.5rem] font-bold text-[#00d4ff] uppercase tracking-wider mt-0.5 truncate">{p.name}</div>
             </div>
           ))}
         </div>
