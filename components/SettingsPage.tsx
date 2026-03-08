@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { getApiKey } from "../lib/ai";
 import { DEFAULT_AVERAGES, type UserAverages } from "../types";
 import SectionHeading from "./SectionHeading";
+import LifeExpectancyCalculator from "./LifeExpectancyCalculator";
 
 interface SettingsPageProps {
   birthdate: string;
@@ -69,6 +70,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 }) => {
   const [apiKeyValue, setApiKeyValue] = useState(() => getApiKey());
   const [saved, setSaved] = useState<string | null>(null);
+  const [showCalculator, setShowCalculator] = useState(false);
 
   function flash(msg: string) {
     setSaved(msg);
@@ -161,6 +163,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                 className={NUM_CLS}
               />
               <span className="text-xs text-text-muted">years</span>
+              <button
+                onClick={() => setShowCalculator(true)}
+                className="h-9 px-3 rounded-lg bg-gemini-button-bg/20 text-[#c39bd3] border border-[#8e44ad]/30 text-xs font-medium hover:bg-gemini-button-bg/30 transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                ✨ AI Estimate
+              </button>
             </div>
           </FieldRow>
         </div>
@@ -246,6 +254,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           <p className="text-[0.6rem] text-text-muted/40">All your data is stored securely in the cloud and syncs across devices.</p>
         </div>
       </motion.section>
+
+      <LifeExpectancyCalculator
+        isOpen={showCalculator}
+        onClose={() => setShowCalculator(false)}
+        onAccept={(years) => { onLifeExpectancyChange(years); flash(`Life expectancy updated to ${years} years`); }}
+        currentAge={birthdate ? Math.floor((Date.now() - new Date(birthdate).getTime()) / (365.25 * 86400000)) : 30}
+      />
     </motion.div>
   );
 };
