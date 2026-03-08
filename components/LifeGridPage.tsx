@@ -96,7 +96,7 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
   }
 
   function getRowLabel(rowIndex: number): string {
-    if (gridMode === "weeks") return rowIndex % 5 === 0 ? `${rowIndex}` : "";
+    if (gridMode === "weeks") return `${rowIndex}`;
     if (gridMode === "months") return `${rowIndex}`;
     return `${birthYear + rowIndex * 10}s`;
   }
@@ -203,10 +203,14 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
             const rowLabel = getRowLabel(rowIndex);
             return (
               <div key={rowIndex} className="flex items-center" style={{ gap: `${GAP[gridMode]}px` }}>
-                {/* Row label */}
+                {/* Row label — year number */}
                 <div className="text-right select-none" style={{
-                  width: 32, minWidth: 32, fontSize: "0.6rem", color: "rgba(0, 212, 255, 0.4)",
-                  fontVariantNumeric: "tabular-nums", lineHeight: `${CELL[gridMode]}px`,
+                  width: 28, minWidth: 28,
+                  fontSize: "0.55rem",
+                  color: rowIndex % 10 === 0 ? "rgba(0, 212, 255, 0.7)" : "rgba(0, 212, 255, 0.35)",
+                  fontWeight: rowIndex % 10 === 0 ? 700 : 500,
+                  fontVariantNumeric: "tabular-nums",
+                  lineHeight: `${CELL[gridMode]}px`,
                 }}>
                   {rowLabel}
                 </div>
