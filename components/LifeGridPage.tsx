@@ -108,29 +108,40 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
 
   return (
     <motion.div
-      className="flex flex-col w-full"
+      className="flex flex-col w-full min-h-screen pb-16"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ minHeight: "100vh", backgroundColor: "#080818", paddingBottom: 60 }}
     >
-      {/* Header */}
-      <div className="text-center pt-4 pb-2 px-4">
-        <h1 className="text-xl font-black text-white tracking-wider uppercase">
-          Your Life in <span style={{ color: ACCENT[gridMode] }}>{gridMode.toUpperCase()}</span>
-        </h1>
-        <p className="text-[#8899aa] text-xs mt-1">
-          {stat.lived.toLocaleString()} {stat.unit} lived · {(stat.total - stat.lived).toLocaleString()} remaining · {Math.round((stat.lived / stat.total) * 100)}%
-        </p>
-      </div>
+      {/* Sticky frosted glass header */}
+      <div style={{
+        background: "rgba(13, 27, 46, 0.7)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(0, 212, 255, 0.15)",
+        padding: "20px 16px 16px",
+        marginBottom: 24,
+        position: "sticky",
+        top: 64,
+        zIndex: 10,
+      }}>
+        {/* Title */}
+        <div className="text-center mb-3">
+          <h1 className="text-xl font-black text-white tracking-wider uppercase">
+            Your Life in <span style={{ color: ACCENT[gridMode] }}>{gridMode.toUpperCase()}</span>
+          </h1>
+          <p className="text-white/60 text-xs mt-1">
+            {stat.lived.toLocaleString()} {stat.unit} lived · {(stat.total - stat.lived).toLocaleString()} remaining · {Math.round((stat.lived / stat.total) * 100)}%
+          </p>
+        </div>
 
-      {/* Battery + controls */}
-      <div className="flex items-center justify-center gap-4 py-2">
-        <LifeBattery percentUsed={pct} size="sm" />
-        <button onClick={() => setShowSnapshot(true)} className="text-xs text-white/30 hover:text-white/60 transition-colors">📸</button>
-        <button onClick={() => setShowHelp(true)} className="text-xs text-white/30 hover:text-white/60 transition-colors">?</button>
-      </div>
+        {/* Battery + controls */}
+        <div className="flex items-center justify-center gap-4 mb-3">
+          <LifeBattery percentUsed={pct} size="sm" />
+          <button onClick={() => setShowSnapshot(true)} className="text-xs text-white/60 hover:text-white transition-colors">📸</button>
+          <button onClick={() => setShowHelp(true)} className="text-xs text-white/60 hover:text-white transition-colors">?</button>
+        </div>
 
-      {/* Mode Switcher */}
-      <div className="flex justify-center gap-2 py-4 px-4">
+        {/* Mode Switcher */}
+        <div className="flex justify-center gap-2">
         {MODE_LABELS.map(({ key, icon, label }) => (
           <button
             key={key}
@@ -174,6 +185,7 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
           </div>
         )}
       </div>
+      </div>{/* end sticky header */}
 
       {/* Grid */}
       <div className="overflow-x-auto px-4 pb-8">
@@ -184,7 +196,7 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
               <div key={rowIndex} className="flex items-center" style={{ gap: `${GAP[gridMode]}px` }}>
                 {/* Row label */}
                 <div className="text-right select-none" style={{
-                  width: 32, minWidth: 32, fontSize: "0.6rem", color: "#4466aa",
+                  width: 32, minWidth: 32, fontSize: "0.6rem", color: "rgba(0, 212, 255, 0.4)",
                   fontVariantNumeric: "tabular-nums", lineHeight: `${CELL[gridMode]}px`,
                 }}>
                   {rowLabel}
@@ -220,7 +232,7 @@ const LifeGridPage: React.FC<LifeGridPageProps> = ({
                       {isYear && (
                         <span className="select-none pointer-events-none" style={{
                           fontSize: "0.5rem", fontWeight: 700, lineHeight: 1,
-                          color: bg !== "transparent" ? "rgba(0,0,0,0.6)" : "#4466aa",
+                          color: bg !== "transparent" ? "rgba(0,0,0,0.6)" : "rgba(0, 212, 255, 0.35)",
                         }}>
                           {yearValue}
                         </span>
