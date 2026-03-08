@@ -1,23 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import { uploadAvatar } from "../lib/storage";
 import { DEFAULT_LIFE_EXPECTANCY, AI_STORAGE_KEY } from "../constants";
 import { DEFAULT_AVERAGES, type UserAverages } from "../types";
-
-export interface ProfileState {
-  birthdate: string;
-  lifeExpectancy: number;
-  displayName: string;
-  email: string;
-  phone: string;
-  averages: UserAverages;
-  loading: boolean;
-}
 
 export function useProfile(userId: string | undefined, userEmail: string | undefined) {
   const [birthdate, setBirthdate] = useState("");
   const [lifeExpectancy, setLifeExpectancy] = useState(DEFAULT_LIFE_EXPECTANCY);
   const [displayName, setDisplayName] = useState("");
+  const [preferredName, setPreferredName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [averages, setAverages] = useState<UserAverages>({ ...DEFAULT_AVERAGES });
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +31,9 @@ export function useProfile(userId: string | undefined, userEmail: string | undef
         if (data.birthdate) setBirthdate(data.birthdate);
         if (data.life_expectancy) setLifeExpectancy(data.life_expectancy);
         if (data.display_name) setDisplayName(data.display_name);
+        if (data.preferred_name) setPreferredName(data.preferred_name);
         if (data.phone) setPhone(data.phone);
+        if (data.avatar_url) setAvatarUrl(data.avatar_url);
         if (data.gemini_api_key) localStorage.setItem(AI_STORAGE_KEY, data.gemini_api_key);
 
         setAverages({
@@ -73,7 +68,15 @@ export function useProfile(userId: string | undefined, userEmail: string | undef
   const updateBirthdate = useCallback((v: string) => { setBirthdate(v); save({ birthdate: v }); }, [save]);
   const updateLifeExpectancy = useCallback((v: number) => { setLifeExpectancy(v); save({ life_expectancy: v }); }, [save]);
   const updateDisplayName = useCallback((v: string) => { setDisplayName(v); save({ display_name: v || null }); }, [save]);
+  const updatePreferredName = useCallback((v: string) => { setPreferredName(v); save({ preferred_name: v || null }); }, [save]);
   const updatePhone = useCallback((v: string) => { setPhone(v); save({ phone: v || null }); }, [save]);
+
+  const updateAvatar = useCallback(async (file: File) => {
+    if (!userId) return;
+    const url = await uploadAvatar(userId, file);
+    setAvatarUrl(url);
+    await save({ avatar_url: url });
+  }, [userId, save]);
 
   const updateApiKey = useCallback((key: string) => {
     const trimmed = key.trim();
@@ -87,10 +90,13 @@ export function useProfile(userId: string | undefined, userEmail: string | undef
     save(patch);
   }, [save]);
 
+  /** The name to greet the user with */
+  const greeting = preferredName || displayName || "";
+
   return {
-    birthdate, lifeExpectancy, displayName, phone, averages, loading,
+    birthdate, lifeExpectancy, displayName, preferredName, phone, avatarUrl, averages, loading, greeting,
     email: userEmail ?? "",
-    updateBirthdate, updateLifeExpectancy, updateDisplayName, updatePhone,
-    updateApiKey, updateAverages,
+    updateBirthdate, updateLifeExpectancy, updateDisplayName, updatePreferredName,
+    updatePhone, updateAvatar, updateApiKey, updateAverages,
   };
 }

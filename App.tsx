@@ -12,12 +12,13 @@ import AuthGate from "./components/AuthGate";
 import Navigation, { type Page } from "./components/Navigation";
 import DashboardPage from "./components/DashboardPage";
 import GridPage from "./components/GridPage";
+import DiaryPage from "./components/DiaryPage";
 import SettingsPage from "./components/SettingsPage";
 
 const App: React.FC = () => {
   const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
   const profile = useProfile(user?.id, user?.email);
-  const { entries: diaryEntries, saveEntry } = useDiary(user?.id);
+  const { entries: diaryEntries, fullEntries, saveEntry } = useDiary(user?.id);
   const { lifeStats, dynamicStats } = useLifeStats(profile.birthdate, profile.lifeExpectancy);
   const { todayMood, recentMoods, saveMood } = useMood(user?.id);
 
@@ -47,7 +48,7 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col items-center w-full min-h-screen p-4 sm:p-5 md:p-6">
       <div className="w-full max-w-7xl flex flex-col gap-4 sm:gap-6 text-center">
-        <Navigation currentPage={page} onNavigate={setPage} displayName={profile.displayName} />
+        <Navigation currentPage={page} onNavigate={setPage} greeting={profile.greeting} avatarUrl={profile.avatarUrl} />
 
         <AnimatePresence mode="wait">
           {page === "settings" ? (
@@ -56,16 +57,29 @@ const App: React.FC = () => {
               birthdate={profile.birthdate}
               lifeExpectancy={profile.lifeExpectancy}
               displayName={profile.displayName}
+              preferredName={profile.preferredName}
               email={profile.email}
               phone={profile.phone}
+              avatarUrl={profile.avatarUrl}
               averages={profile.averages}
               onBirthdateChange={profile.updateBirthdate}
               onLifeExpectancyChange={profile.updateLifeExpectancy}
               onDisplayNameChange={profile.updateDisplayName}
+              onPreferredNameChange={profile.updatePreferredName}
               onPhoneChange={profile.updatePhone}
+              onAvatarChange={profile.updateAvatar}
               onApiKeyChange={profile.updateApiKey}
               onAveragesChange={profile.updateAverages}
               onSignOut={signOut}
+            />
+          ) : page === "diary" ? (
+            <DiaryPage
+              key="diary"
+              fullEntries={fullEntries}
+              diaryEntries={diaryEntries}
+              birthdate={profile.birthdate}
+              weeksPassed={lifeStats?.weeksPassed ?? 0}
+              onSave={saveEntry}
             />
           ) : page === "grid" && hasBirthdate ? (
             <GridPage
@@ -93,7 +107,9 @@ const App: React.FC = () => {
           ) : (
             <div key="empty" className="flex flex-col items-center justify-center py-20 gap-4">
               <div className="text-6xl opacity-20">◉</div>
-              <p className="text-text-muted text-lg">Set your birthdate in Settings to begin.</p>
+              <p className="text-text-muted text-lg">
+                {profile.greeting ? `Welcome, ${profile.greeting}! ` : ""}Set your birthdate in Settings to begin.
+              </p>
               <button
                 onClick={() => setPage("settings")}
                 className="mt-2 px-5 py-2 rounded-lg bg-primary/20 text-primary border border-primary/30 text-sm font-medium hover:bg-primary/30 transition-colors"

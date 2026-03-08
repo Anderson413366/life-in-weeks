@@ -8,13 +8,17 @@ interface SettingsPageProps {
   birthdate: string;
   lifeExpectancy: number;
   displayName: string;
+  preferredName: string;
   email: string;
   phone: string;
+  avatarUrl: string;
   averages: UserAverages;
   onBirthdateChange: (v: string) => void;
   onLifeExpectancyChange: (v: number) => void;
   onDisplayNameChange: (v: string) => void;
+  onPreferredNameChange: (v: string) => void;
   onPhoneChange: (v: string) => void;
+  onAvatarChange: (file: File) => Promise<void>;
   onApiKeyChange: (key: string) => void;
   onAveragesChange: (patch: Partial<UserAverages>) => void;
   onSignOut: () => void;
@@ -59,9 +63,9 @@ const AVG_FIELDS: AvgField[] = [
 ];
 
 const SettingsPage: React.FC<SettingsPageProps> = ({
-  birthdate, lifeExpectancy, displayName, email, phone, averages,
-  onBirthdateChange, onLifeExpectancyChange, onDisplayNameChange,
-  onPhoneChange, onApiKeyChange, onAveragesChange, onSignOut,
+  birthdate, lifeExpectancy, displayName, preferredName, email, phone, avatarUrl, averages,
+  onBirthdateChange, onLifeExpectancyChange, onDisplayNameChange, onPreferredNameChange,
+  onPhoneChange, onAvatarChange, onApiKeyChange, onAveragesChange, onSignOut,
 }) => {
   const [apiKeyValue, setApiKeyValue] = useState(() => getApiKey());
   const [saved, setSaved] = useState<string | null>(null);
@@ -94,12 +98,36 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       <motion.section custom={0} initial="hidden" animate="visible" variants={section}>
         <SectionHeading title="Profile" />
         <div className="glass rounded-xl p-5 sm:p-6 flex flex-col gap-4">
-          <FieldRow label="Name">
+          {/* Avatar */}
+          <div className="flex items-center gap-4 mb-2">
+            <label className="cursor-pointer group relative">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="w-16 h-16 rounded-full object-cover border-2 border-box-border group-hover:border-primary transition-colors" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-box-border group-hover:border-primary transition-colors flex items-center justify-center text-2xl text-primary">
+                  {(preferredName || displayName || "?")[0]?.toUpperCase()}
+                </div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">📷</div>
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onAvatarChange(f); }} />
+            </label>
+            <div className="text-xs text-text-muted">Click to upload a profile photo</div>
+          </div>
+          <FieldRow label="Full Name">
             <input
               type="text"
               value={displayName}
               onChange={(e) => onDisplayNameChange(e.target.value)}
-              placeholder="Your name"
+              placeholder="Your full name"
+              className={INPUT_CLS}
+            />
+          </FieldRow>
+          <FieldRow label="Preferred Name">
+            <input
+              type="text"
+              value={preferredName}
+              onChange={(e) => onPreferredNameChange(e.target.value)}
+              placeholder="What should we call you?"
               className={INPUT_CLS}
             />
           </FieldRow>
