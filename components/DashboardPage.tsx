@@ -7,8 +7,6 @@ import {
 } from "../lib/lifeData";
 import { getGeneration } from "../lib/generations";
 import { getZodiacSign } from "../lib/zodiac";
-import { useHoroscope } from "../hooks/useHoroscope";
-import { useFamousBirthdays } from "../hooks/useFamousBirthdays";
 
 import LifeBattery from "./LifeBattery";
 import ExactAgeTicker from "./ExactAgeTicker";
@@ -17,22 +15,25 @@ import ProgressBar from "./ProgressBar";
 import MilestoneTimeline from "./MilestoneTimeline";
 import AIInsightBanner from "./AIInsightBanner";
 import LegacySnapshot from "./LegacySnapshot";
+import { useHoroscope } from "../hooks/useHoroscope";
+import { useFamousBirthdays } from "../hooks/useFamousBirthdays";
 import type { MoodEntry } from "../hooks/useMood";
 import type { AppMode } from "../lib/theme";
 
 const LOW_MOODS = new Set(["😔", "😢"]);
 
+// ADHD-optimized: each mood has its own strong color identity
 const MOODS = [
-  { emoji: "😄", label: "Great",  energy: 5 },
-  { emoji: "🙂", label: "Good",   energy: 4 },
-  { emoji: "😐", label: "Okay",   energy: 3 },
-  { emoji: "😔", label: "Low",    energy: 2 },
-  { emoji: "😢", label: "Rough",  energy: 1 },
+  { emoji: "😄", label: "Amazing",    energy: 5, color: "#00ff9d", glow: "#00ff9d" },
+  { emoji: "🙂", label: "Good",       energy: 4, color: "#00d4ff", glow: "#00d4ff" },
+  { emoji: "😐", label: "Okay",       energy: 3, color: "#ffd700", glow: "#ffd700" },
+  { emoji: "😔", label: "Low",        energy: 2, color: "#ff6b00", glow: "#ff6b00" },
+  { emoji: "😢", label: "Struggling", energy: 1, color: "#ec4899", glow: "#ec4899" },
 ];
 
-// Premium glassmorphism
-const GLASS = "bg-white/[0.08] backdrop-blur-2xl border border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]";
-const GLASS_BRIGHT = "bg-white/[0.10] backdrop-blur-xl border border-white/25 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]";
+// Solid card styles — NO translucent whites
+const CARD = "bg-[#0d1b2e] border border-[#1e3a5f] rounded-3xl";
+const CARD_SHADOW = "0 0 40px rgba(0,212,255,0.06)";
 
 interface DashboardPageProps {
   lifeStats: LifeStats;
@@ -57,23 +58,23 @@ const fade = (i: number) => ({
 
 function Stat({ value, label }: { value: number | string; label: string; live?: boolean }) {
   return (
-    <div className={`${GLASS} p-5 text-center`}>
+    <div className={`${CARD} p-5 text-center`} style={{ boxShadow: CARD_SHADOW }}>
       <div className="text-3xl sm:text-4xl font-black text-white counter-digits">
         {typeof value === "number" ? value.toLocaleString() : value}
       </div>
-      <div className="text-[0.55rem] text-[#00d4ff] uppercase tracking-[0.2em] font-semibold mt-1.5">{label}</div>
+      <div className="text-xs font-bold text-[#00d4ff] uppercase tracking-[0.2em] mt-1.5">{label}</div>
     </div>
   );
 }
 
 function DataRow({ icon, value, label, sub }: { icon: string; value: string | number; label: string; sub?: string }) {
   return (
-    <div className={`${GLASS} p-4 flex items-center gap-4`}>
+    <div className={`${CARD} p-4 flex items-center gap-4`} style={{ boxShadow: CARD_SHADOW }}>
       <span className="text-2xl shrink-0">{icon}</span>
       <div>
         <div className="text-xl font-black text-white counter-digits">{typeof value === "number" ? value.toLocaleString() : value}</div>
-        <div className="text-[0.55rem] text-[#00d4ff] uppercase tracking-[0.2em] font-semibold">{label}</div>
-        {sub && <div className="text-[0.5rem] text-white/30 mt-0.5">{sub}</div>}
+        <div className="text-xs font-bold text-[#00d4ff] uppercase tracking-[0.2em]">{label}</div>
+        {sub && <div className="text-xs text-white/60 mt-0.5">{sub}</div>}
       </div>
     </div>
   );
@@ -116,7 +117,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     >
       {/* ══ HERO ══════════════════════════════════════════════ */}
       <motion.section className="flex flex-col items-center pt-4" {...fade(0)}>
-        <p className="text-sm italic text-white/40 font-light max-w-md text-center leading-relaxed mb-8">"{quote}"</p>
+        <p className="text-sm italic font-light max-w-md text-center leading-relaxed mb-8" style={{ color: "rgba(180, 210, 255, 0.85)" }}>
+          "{quote}"
+        </p>
 
         <motion.div
           className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center"
@@ -124,7 +127,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           transition={{ duration: pulseDuration, repeat: Infinity, ease: "easeInOut" }}
         >
           <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 280 280">
-            <circle cx="140" cy="140" r="125" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
+            <circle cx="140" cy="140" r="125" fill="none" stroke="#1e3a5f" strokeWidth="12" />
             <motion.circle
               cx="140" cy="140" r="125" fill="none"
               stroke="url(#hero-ring-grad)" strokeWidth="12" strokeLinecap="round"
@@ -143,35 +146,34 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           </svg>
           <div className="relative text-center">
             <div className="text-[4.5rem] font-extrabold text-white leading-none">{pct}<span className="text-3xl">%</span></div>
-            <div className="text-[0.6rem] text-[#00d4ff] uppercase tracking-[0.3em] mt-1 font-semibold">Of Your Journey</div>
+            <div className="text-xs font-bold text-[#00d4ff] uppercase tracking-[0.3em] mt-1">Of Your Journey</div>
           </div>
         </motion.div>
 
-        {/* Badges */}
+        {/* Badges — solid navy, cyan accents */}
         <div className="flex flex-wrap justify-center gap-2 mt-5">
-          <span className="px-3 py-1 rounded-full text-[0.6rem] font-medium bg-white/[0.15] border border-white/30 text-white">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#00d4ff]/40 text-[#00d4ff]">
             Week {lifeStats.currentWeekInYear} · Year {lifeStats.currentYearOfLife}
           </span>
           {generation && (
-            <span className="px-3 py-1 rounded-full text-[0.6rem] font-medium bg-white/[0.15] border border-white/30 text-white">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#bf5fff]/40 text-[#bf5fff]">
               {generation.emoji} {generation.name}
             </span>
           )}
           {zodiac && (
-            <span className="px-3 py-1 rounded-full text-[0.6rem] font-medium bg-white/[0.15] border border-white/30 text-white">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#00d4ff]/40 text-[#00d4ff]">
               {zodiac.symbol} {zodiac.name}
             </span>
           )}
-          <span className="px-3 py-1 rounded-full text-[0.6rem] font-medium bg-white/[0.15] border border-white/30 text-white">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#0d1b2e] border border-[#ffd700]/40 text-[#ffd700]">
             {chinese.emoji} {chinese.animal}
           </span>
         </div>
 
-        {/* Battery + snapshot */}
         <div className="flex flex-col items-center gap-3 mt-5">
           <LifeBattery percentUsed={pct} size="md" />
           <button onClick={() => setShowSnapshot(true)}
-            className="px-4 py-1.5 rounded-full text-[0.65rem] bg-white/[0.08] border border-white/20 text-white/60 hover:text-white hover:border-white/30 transition-all">
+            className="px-4 py-1.5 rounded-full text-xs bg-[#0d1b2e] border border-[#1e3a5f] text-white/90 hover:text-white hover:border-[#00d4ff]/60 transition-all">
             📸 Share Snapshot
           </button>
         </div>
@@ -179,33 +181,42 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
       {/* ══ DAILY CHECK-IN ════════════════════════════════════ */}
       <motion.section {...fade(1)}>
-        <div className={`${GLASS_BRIGHT} p-6 sm:p-8`}>
-          <p className="text-center text-xs text-white/70 uppercase tracking-[0.2em] mb-6 font-medium">
+        <div className={`${CARD} p-6 sm:p-8`} style={{ boxShadow: "0 0 40px rgba(0,212,255,0.08)" }}>
+          <p className="text-center text-xs font-bold text-[#00d4ff] uppercase tracking-[0.3em] mb-6">
             How are you feeling right now?
           </p>
-          <div className="flex justify-center gap-8">
+          <div className="flex justify-center gap-6 sm:gap-8">
             {MOODS.map((m) => {
               const isSelected = todayMood?.mood === m.emoji;
               return (
-                <motion.button
+                <button
                   key={m.emoji}
                   onClick={() => onSaveMood(m.emoji, m.energy)}
-                  className={`text-5xl cursor-pointer transition-all duration-200
-                    ${isSelected ? "scale-110 drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]" : "opacity-40 hover:opacity-100 hover:scale-125 hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.5)]"}`}
-                  whileTap={{ scale: 0.9 }}
+                  className="flex flex-col items-center gap-2 group transition-all duration-200"
                 >
-                  {m.emoji}
-                </motion.button>
+                  <div
+                    className="text-5xl transition-all duration-200 group-hover:scale-125"
+                    style={{
+                      filter: isSelected ? `drop-shadow(0 0 16px ${m.glow})` : `drop-shadow(0 0 8px ${m.glow}66)`,
+                      transform: isSelected ? "scale(1.15)" : undefined,
+                    }}
+                  >
+                    {m.emoji}
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: m.color }}>
+                    {m.label}
+                  </span>
+                </button>
               );
             })}
           </div>
           {todayMood && (
-            <p className="text-center text-xs text-white/30 mt-4">
+            <p className="text-center text-xs text-white/60 mt-4">
               {MOODS.find((m) => m.emoji === todayMood.mood)?.label} · Resets in 3 hours
             </p>
           )}
           {recentMoods.length > 1 && (
-            <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-white/5">
+            <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-[#1e3a5f]">
               {recentMoods.slice(0, 7).map((m) => <span key={m.date} className="text-lg" title={m.date}>{m.mood}</span>)}
             </div>
           )}
@@ -217,7 +228,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <AIInsightBanner mode={mode} lifeStats={lifeStats} todayMood={todayMood} />
       </motion.section>
 
-      {/* ══ ALL DATA IN ACCORDIONS (closed by default) ═══════ */}
+      {/* ══ ACCORDIONS (gap-2 compact list) ═══════════════════ */}
       <div className="flex flex-col gap-2">
 
       {/* 1 */}
@@ -227,49 +238,39 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
       {/* 2 */}
       <AccordionSection title="Birthday Countdown" icon="🎂">
-        <div className={`${GLASS} p-6 max-w-sm mx-auto text-center`}>
+        <div className={`${CARD} p-6 max-w-sm mx-auto text-center`} style={{ boxShadow: CARD_SHADOW }}>
           <div className="text-3xl mb-2">🎂</div>
           <div className="text-4xl font-black text-white counter-digits">{birthday.daysUntil}</div>
-          <div className="text-[0.55rem] text-[#00d4ff] uppercase tracking-[0.2em] font-semibold mt-1">days until you turn {birthday.turningAge}</div>
-          <div className="text-[0.5rem] text-white/30 mt-1">{birthday.nextBirthdayDate}</div>
+          <div className="text-xs font-bold text-[#00d4ff] uppercase tracking-[0.2em] mt-1">days until you turn {birthday.turningAge}</div>
+          <div className="text-xs text-white/60 mt-1">{birthday.nextBirthdayDate}</div>
         </div>
       </AccordionSection>
 
       {/* 3 */}
       <AccordionSection title="Born On Your Day" icon="🌟">
-        {(() => {
-          // Trigger fetch on first expand
-          if (!famousBirthdays.people.length && !famousBirthdays.loading && !famousBirthdays.error) famousBirthdays.fetch();
-          return null;
-        })()}
+        {(() => { if (!famousBirthdays.people.length && !famousBirthdays.loading && !famousBirthdays.error) famousBirthdays.fetch(); return null; })()}
         {famousBirthdays.loading && (
           <div className="flex gap-3 overflow-x-auto pb-2">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className={`${GLASS} min-w-[140px] max-w-[140px] p-4 animate-pulse`}>
-                <div className="w-8 h-8 bg-white/5 rounded-full mb-2" />
-                <div className="w-full h-3 bg-white/5 rounded mb-1" />
-                <div className="w-2/3 h-2 bg-white/5 rounded" />
+              <div key={i} className={`${CARD} min-w-[140px] max-w-[140px] p-4 animate-pulse`}>
+                <div className="w-8 h-8 bg-[#1e3a5f] rounded-full mb-2" />
+                <div className="w-full h-3 bg-[#1e3a5f] rounded mb-1" />
+                <div className="w-2/3 h-2 bg-[#1e3a5f] rounded" />
               </div>
             ))}
           </div>
         )}
-        {famousBirthdays.error === "no-key" && (
-          <p className="text-sm text-white/30 text-center py-4">Add your AI key in Settings to see famous people born on your day.</p>
-        )}
-        {famousBirthdays.error && famousBirthdays.error !== "no-key" && (
-          <p className="text-sm text-red-400/60 text-center py-4">{famousBirthdays.error}</p>
-        )}
+        {famousBirthdays.error === "no-key" && <p className="text-sm text-white/60 text-center py-4">Add your AI key in Settings to see famous people born on your day.</p>}
+        {famousBirthdays.error && famousBirthdays.error !== "no-key" && <p className="text-sm text-red-400 text-center py-4">{famousBirthdays.error}</p>}
         {famousBirthdays.people.length > 0 && (
           <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
             {famousBirthdays.people.map((p) => (
-              <div key={p.name} className={`${GLASS} min-w-[140px] max-w-[140px] p-4 shrink-0`}>
+              <div key={p.name} className={`${CARD} min-w-[140px] max-w-[140px] p-4 shrink-0`}>
                 <div className="text-3xl mb-2">{p.emoji}</div>
                 <div className="text-white font-bold text-sm leading-tight">{p.name}</div>
-                <div className="mt-1">
-                  <span className="bg-white/10 text-white/60 text-[0.5rem] uppercase tracking-wide rounded-full px-2 py-0.5">{p.field}</span>
-                </div>
-                <div className="text-white/30 text-[0.55rem] mt-1">{p.born} – {p.died ?? "alive"}</div>
-                <div className="text-white/50 text-[0.6rem] leading-snug mt-1">{p.tagline}</div>
+                <div className="mt-1"><span className="bg-[#1e3a5f] text-[#00d4ff] text-[0.5rem] uppercase tracking-wide rounded-full px-2 py-0.5 font-semibold">{p.field}</span></div>
+                <div className="text-white/60 text-xs mt-1">{p.born} – {p.died ?? "alive"}</div>
+                <div className="text-white/85 text-xs leading-snug mt-1">{p.tagline}</div>
               </div>
             ))}
           </div>
@@ -286,6 +287,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </AccordionSection>
 
+      {/* 5 */}
       <AccordionSection title={isLowMood ? "Every Second Is a Gift" : "Live Chronometer"} icon="⏱️">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Stat value={dynamicStats.hoursLived} label="Hours Lived" live />
@@ -317,6 +319,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </AccordionSection>
 
+      {/* 8 */}
       <AccordionSection title="Unique Human Facts" icon="🧬">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <DataRow icon="🩸" value={Math.round(lifeStats.daysPassed * 7570)} label="Liters of Blood Pumped" sub="heart pumps ~5L/min" />
@@ -379,74 +382,49 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             { icon: "🐕", name: "Dog Yrs", val: altAges.dogYears },
             { icon: "🐈", name: "Cat Yrs", val: altAges.catYears },
           ].map((p) => (
-            <div key={p.name} className={`${GLASS} p-3 text-center`}>
+            <div key={p.name} className={`${CARD} p-3 text-center`}>
               <div className="text-lg mb-0.5">{p.icon}</div>
               <div className="text-base font-black text-white counter-digits">{p.val}</div>
-              <div className="text-[0.45rem] text-[#00d4ff] uppercase tracking-wider font-semibold mt-0.5">{p.name}</div>
+              <div className="text-[0.5rem] font-bold text-[#00d4ff] uppercase tracking-wider mt-0.5">{p.name}</div>
             </div>
           ))}
         </div>
       </AccordionSection>
 
+      {/* 14 */}
       <AccordionSection title={`Your ${zodiac?.name ?? ""} Horoscope`} icon="✨">
-        <div className={`${GLASS} p-5 sm:p-6`}>
-          {/* Period tabs */}
+        <div className={`${CARD} p-5 sm:p-6`} style={{ boxShadow: CARD_SHADOW }}>
           <div className="flex justify-center gap-2 mb-5">
             {(["today", "week", "year"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => horoscope.fetch(p)}
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize
-                  ${horoscope.activePeriod === p && horoscope.result
-                    ? "bg-gradient-to-r from-cyan-500 to-pink-500 text-white"
-                    : "bg-white/[0.08] border border-white/10 text-white/50 hover:text-white"}`}
-              >
+              <button key={p} onClick={() => horoscope.fetch(p)}
+                className="px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize"
+                style={{
+                  background: horoscope.activePeriod === p && horoscope.result ? "linear-gradient(135deg, #00d4ff, #ec4899)" : "#0d1b2e",
+                  color: horoscope.activePeriod === p && horoscope.result ? "#fff" : "#00d4ff",
+                  border: `1px solid ${horoscope.activePeriod === p && horoscope.result ? "transparent" : "#1e3a5f"}`,
+                }}>
                 {p === "today" ? "Today" : p === "week" ? "This Week" : "This Year"}
               </button>
             ))}
           </div>
-
-          {/* Loading skeleton */}
-          {horoscope.loading && (
-            <div className="flex flex-col items-center gap-3 py-6 animate-pulse">
-              <div className="w-24 h-8 bg-white/5 rounded-xl" />
-              <div className="w-full h-16 bg-white/5 rounded-xl" />
-              <div className="w-48 h-4 bg-white/5 rounded-xl" />
-            </div>
-          )}
-
-          {/* Error / no key */}
-          {horoscope.error === "no-key" && (
-            <p className="text-center text-sm text-white/30 py-4">Add your AI key in Settings to unlock your personal horoscope.</p>
-          )}
-          {horoscope.error && horoscope.error !== "no-key" && (
-            <p className="text-center text-sm text-red-400/60 py-4">{horoscope.error}</p>
-          )}
-
-          {/* Result */}
+          {horoscope.loading && <div className="flex flex-col items-center gap-3 py-6 animate-pulse"><div className="w-24 h-8 bg-[#1e3a5f] rounded-xl" /><div className="w-full h-16 bg-[#1e3a5f] rounded-xl" /></div>}
+          {horoscope.error === "no-key" && <p className="text-center text-sm text-white/60 py-4">Add your AI key in Settings to unlock your horoscope.</p>}
+          {horoscope.error && horoscope.error !== "no-key" && <p className="text-center text-sm text-amber-400 py-4">⚠️ {horoscope.error}</p>}
           {horoscope.result && !horoscope.loading && (
             <div className="flex flex-col items-center gap-4">
-              <div className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent">
-                {horoscope.result.theme}
-              </div>
-              <p className="text-sm text-white/80 leading-relaxed text-center max-w-md">{horoscope.result.message}</p>
+              <div className="text-3xl font-black bg-gradient-to-r from-[#00d4ff] to-[#ec4899] bg-clip-text text-transparent">{horoscope.result.theme}</div>
+              <p className="text-sm text-white/90 leading-relaxed text-center max-w-md">{horoscope.result.message}</p>
               <div className="flex items-center gap-4 text-xs">
-                <span className="text-[#00d4ff]">Focus: {horoscope.result.focus}</span>
-                <span className="text-white/40">
-                  {horoscope.result.energy === "high" ? "⚡⚡⚡" : horoscope.result.energy === "medium" ? "⚡⚡" : "⚡"}
-                </span>
+                <span className="text-[#00d4ff] font-semibold">Focus: {horoscope.result.focus}</span>
+                <span className="text-white/60">{horoscope.result.energy === "high" ? "⚡⚡⚡" : horoscope.result.energy === "medium" ? "⚡⚡" : "⚡"}</span>
               </div>
             </div>
           )}
-
-          {/* Default state */}
-          {!horoscope.result && !horoscope.loading && !horoscope.error && (
-            <p className="text-center text-sm text-white/20 py-4">Tap a period above to reveal your horoscope</p>
-          )}
+          {!horoscope.result && !horoscope.loading && !horoscope.error && <p className="text-center text-sm text-white/60 py-4">Tap a period above to reveal your horoscope</p>}
         </div>
       </AccordionSection>
 
-      </div>{/* end accordion gap-2 wrapper */}
+      </div>{/* end accordion wrapper */}
 
       <LegacySnapshot isOpen={showSnapshot} onClose={() => setShowSnapshot(false)}
         lifeStats={lifeStats} birthYear={birthYear} birthMonth={birthMonth} birthDay={birthDay}

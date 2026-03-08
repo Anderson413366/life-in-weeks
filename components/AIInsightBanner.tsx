@@ -66,12 +66,13 @@ const AIInsightBanner: React.FC<AIInsightBannerProps> = ({ mode, lifeStats, toda
     <AnimatePresence>
       <motion.div
         className={`mx-auto max-w-2xl px-5 py-3 rounded-2xl border text-center
-          ${isFocus ? "border-[#333] bg-[#111]" : "border-primary/15 glass"}`}
+          ${isFocus ? "border-[#333] bg-[#111]" : "border-[#00d4ff]/30 bg-[#0d1b2e]"}`}
+        style={{ boxShadow: "0 0 30px rgba(0,212,255,0.06)" }}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
       >
-        <p className={`text-sm leading-relaxed italic ${isFocus ? "text-[#aaa]" : "text-text-muted/80"}`}>
+        <p className={`text-sm leading-relaxed italic ${isFocus ? "text-[#aaa]" : "text-white/90"}`}>
           "{insight}"
         </p>
       </motion.div>
