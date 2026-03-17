@@ -5,15 +5,18 @@ interface AuthGateProps {
   onSignIn: (email: string, password: string) => Promise<void>;
   onSignUp: (email: string, password: string) => Promise<void>;
   onGoogleSignIn: () => Promise<void>;
+  onResetPassword: (email: string) => Promise<void>;
 }
 
-const AuthGate: React.FC<AuthGateProps> = ({ onSignIn, onSignUp, onGoogleSignIn }) => {
+const AuthGate: React.FC<AuthGateProps> = ({ onSignIn, onSignUp, onGoogleSignIn, onResetPassword }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +54,91 @@ const AuthGate: React.FC<AuthGateProps> = ({ onSignIn, onSignUp, onGoogleSignIn 
           <button
             onClick={() => { setCheckEmail(false); setIsSignUp(false); }}
             className="mt-6 text-sm text-[#00d4ff] hover:underline"
+          >
+            ← Back to sign in
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (resetSent) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <motion.div
+          className="w-full max-w-sm card-base p-8 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="text-5xl mb-4">🔑</div>
+          <h2 className="text-xl font-bold text-white mb-2">Reset Link Sent</h2>
+          <p className="text-white/60 text-sm leading-relaxed mb-4">
+            We sent a password reset link to <strong className="text-[#00d4ff]">{email}</strong>. Click the link in your email to set a new password.
+          </p>
+          <p className="text-white/30 text-xs">Didn't get it? Check your spam folder.</p>
+          <button
+            onClick={() => { setResetSent(false); setIsForgotPassword(false); }}
+            className="mt-6 text-sm text-[#00d4ff] hover:underline"
+          >
+            ← Back to sign in
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (isForgotPassword) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <motion.div
+          className="w-full max-w-sm card-base p-6 sm:p-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h1 className="text-3xl font-bold text-[#00d4ff] text-center mb-1 uppercase tracking-wider">
+            Life in Weeks
+          </h1>
+          <p className="text-sm text-white/50 text-center mb-6">
+            Reset your password
+          </p>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setError("");
+              setLoading(true);
+              try {
+                await onResetPassword(email);
+                setResetSent(true);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Failed to send reset email");
+              } finally {
+                setLoading(false);
+              }
+            }}
+            className="flex flex-col gap-3"
+          >
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-11 rounded-xl border border-[rgba(120,80,200,0.15)] bg-transparent px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/40 transition-colors"
+            />
+            {error && <p className="text-[#ec4899] text-sm text-center">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-11 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg, #00d4ff, #ec4899)", color: "white" }}
+            >
+              {loading ? "Sending..." : "Send Reset Link"}
+            </button>
+          </form>
+          <button
+            onClick={() => { setIsForgotPassword(false); setError(""); }}
+            className="mt-4 text-sm text-white/40 hover:text-[#00d4ff] transition-colors w-full text-center"
           >
             ← Back to sign in
           </button>
@@ -131,6 +219,15 @@ const AuthGate: React.FC<AuthGateProps> = ({ onSignIn, onSignUp, onGoogleSignIn 
         >
           {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
         </button>
+
+        {!isSignUp && (
+          <button
+            onClick={() => { setIsForgotPassword(true); setError(""); }}
+            className="mt-2 text-sm text-white/30 hover:text-[#ec4899] transition-colors w-full text-center"
+          >
+            Forgot your password?
+          </button>
+        )}
 
         <p className="text-[0.55rem] text-white/20 text-center mt-4">
           By signing up, you agree to our Terms of Service and Privacy Policy.

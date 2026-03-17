@@ -55,10 +55,17 @@ export function useAuth() {
     if (error) throw error;
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}`,
+    });
+    if (error) throw error;
+  }, []);
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);
 
-  return { ...state, signUp, signIn, signInWithGoogle, signOut };
+  return { ...state, signUp, signIn, signInWithGoogle, resetPassword, signOut };
 }
