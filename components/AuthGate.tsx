@@ -6,17 +6,30 @@ interface AuthGateProps {
   onSignUp: (email: string, password: string) => Promise<void>;
   onGoogleSignIn: () => Promise<void>;
   onResetPassword: (email: string) => Promise<void>;
+  onUpdatePassword: (password: string) => Promise<void>;
+  onExitRecoveryMode: () => void;
+  recoveryMode: boolean;
 }
 
-const AuthGate: React.FC<AuthGateProps> = ({ onSignIn, onSignUp, onGoogleSignIn, onResetPassword }) => {
+const AuthGate: React.FC<AuthGateProps> = ({
+  onSignIn,
+  onSignUp,
+  onGoogleSignIn,
+  onResetPassword,
+  onUpdatePassword,
+  onExitRecoveryMode,
+  recoveryMode,
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [passwordUpdated, setPasswordUpdated] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,6 +70,103 @@ const AuthGate: React.FC<AuthGateProps> = ({ onSignIn, onSignUp, onGoogleSignIn,
           >
             ← Back to sign in
           </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (recoveryMode || passwordUpdated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <motion.div
+          className="w-full max-w-sm card-base p-6 sm:p-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h1 className="text-3xl font-bold text-[#00d4ff] text-center mb-1 uppercase tracking-wider">
+            Life in Weeks
+          </h1>
+          <p className="text-sm text-white/50 text-center mb-6">
+            {passwordUpdated ? "Password updated" : "Choose a new password"}
+          </p>
+
+          {passwordUpdated ? (
+            <div className="flex flex-col gap-4 text-center">
+              <p className="text-white/60 text-sm leading-relaxed">
+                Your password has been updated. Continue into the app with your new login.
+              </p>
+              <button
+                onClick={() => {
+                  setPasswordUpdated(false);
+                  setPassword("");
+                  setConfirmPassword("");
+                  setError("");
+                  onExitRecoveryMode();
+                }}
+                className="h-11 rounded-xl font-semibold text-sm transition-all"
+                style={{ background: "linear-gradient(135deg, #00d4ff, #ec4899)", color: "white" }}
+              >
+                Continue
+              </button>
+            </div>
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setError("");
+
+                if (password.length < 8) {
+                  setError("Use at least 8 characters.");
+                  return;
+                }
+
+                if (password !== confirmPassword) {
+                  setError("Passwords do not match.");
+                  return;
+                }
+
+                setLoading(true);
+                try {
+                  await onUpdatePassword(password);
+                  setPasswordUpdated(true);
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Failed to update password");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="flex flex-col gap-3"
+            >
+              <input
+                type="password"
+                placeholder="New password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="h-11 rounded-xl border border-[rgba(120,80,200,0.15)] bg-transparent px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/40 transition-colors"
+              />
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
+                className="h-11 rounded-xl border border-[rgba(120,80,200,0.15)] bg-transparent px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/40 transition-colors"
+              />
+              {error && <p className="text-[#ec4899] text-sm text-center">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="h-11 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, #00d4ff, #ec4899)", color: "white" }}
+              >
+                {loading ? "Saving..." : "Update Password"}
+              </button>
+            </form>
+          )}
         </motion.div>
       </div>
     );

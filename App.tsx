@@ -23,7 +23,18 @@ import Footer from "./components/Footer";
 import FeedbackPopup from "./components/FeedbackPopup";
 
 const App: React.FC = () => {
-  const { user, loading: authLoading, signIn, signUp, signInWithGoogle, resetPassword, signOut } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    recoveryMode,
+    signIn,
+    signUp,
+    signInWithGoogle,
+    resetPassword,
+    updatePassword,
+    exitRecoveryMode,
+    signOut,
+  } = useAuth();
   const profile = useProfile(user?.id, user?.email);
   const { entries: diaryEntries, fullEntries, saveEntry } = useDiary(user?.id);
   const { lifeStats, dynamicStats } = useLifeStats(profile.birthdate, profile.lifeExpectancy);
@@ -41,7 +52,19 @@ const App: React.FC = () => {
     );
   }
 
-  if (!user) return <AuthGate onSignIn={signIn} onSignUp={signUp} onGoogleSignIn={signInWithGoogle} onResetPassword={resetPassword} />;
+  if (!user || recoveryMode) {
+    return (
+      <AuthGate
+        onSignIn={signIn}
+        onSignUp={signUp}
+        onGoogleSignIn={signInWithGoogle}
+        onResetPassword={resetPassword}
+        onUpdatePassword={updatePassword}
+        onExitRecoveryMode={exitRecoveryMode}
+        recoveryMode={recoveryMode}
+      />
+    );
+  }
 
   if (profile.loading) {
     return (

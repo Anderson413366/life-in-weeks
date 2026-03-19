@@ -15,6 +15,11 @@ Life in Weeks is a visual life dashboard and journaling app. It shows your entir
 - **GitHub**: https://github.com/Anderson413366/life-in-weeks
 - **Supabase Project**: `bqoqjixsdqrqsxasyifa` (gleamops project, `liw_` prefixed tables)
 
+Auth recovery flow:
+- Forgot password is triggered from `AuthGate`
+- Reset emails return to `https://life-in-weeks-seven-silk.vercel.app/?reset=1`
+- `useAuth()` exchanges the auth code, enters recovery mode, and `AuthGate` renders the new password form
+
 ## Architecture
 
 ### Database (Supabase — `public` schema, `liw_` prefix)
@@ -35,6 +40,7 @@ All tables have RLS policies — users can only access their own data.
 ### Auth
 - Email/password with email verification
 - Google OAuth (requires Google Cloud credentials in Supabase dashboard)
+- Password recovery is handled in-app via `?reset=1` + Supabase code exchange
 - Trigger on `auth.users` INSERT logs signups to `liw_signup_log`
 
 ### File Structure
@@ -61,6 +67,7 @@ index.css      → Premium warm dark theme, card system, accessibility
 | `TimeMirrorPage` | AI face aging across decades (Gemini image generation) |
 | `SettingsPage` | Profile, API key, custom averages, display mode, contact, life expectancy calculator |
 | `AuthGate` | Login/signup with Google OAuth + email/password |
+| `AuthGate` | Also handles forgot-password and in-app password recovery |
 | `FeedbackPopup` | Star rating + follow-up for < 5 stars |
 | `Navigation` | 5-tab centered nav bar |
 | `Footer` | Copyright + tagline |

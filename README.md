@@ -89,6 +89,16 @@ npm run build
 vercel deploy --prod
 ```
 
+## Auth Recovery
+
+Life in Weeks now supports password reset end-to-end inside the SPA:
+
+- Request reset from the auth gate "Forgot your password?" action
+- Supabase returns to `https://life-in-weeks-seven-silk.vercel.app/?reset=1`
+- The app exchanges the auth code, enters recovery mode, and prompts for a new password in-place
+
+Because this app shares a Supabase project with GleamOps and AnchorLife, reset emails from Life in Weeks must continue to pass `redirectTo` explicitly.
+
 ---
 
 ## Environment
