@@ -35,9 +35,12 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   return `${data.publicUrl}?t=${Date.now()}`;
 }
 
-export async function deletePhoto(url: string): Promise<void> {
+export async function deletePhoto(url: string, userId: string): Promise<void> {
   // Extract path from URL: https://xxx.supabase.co/storage/v1/object/public/liw-photos/USER/FILE
   const match = url.match(/liw-photos\/(.+?)(\?|$)/);
   if (!match) return;
-  await supabase.storage.from(BUCKET).remove([match[1]]);
+  const path = match[1];
+  // Verify the path belongs to the authenticated user
+  if (!path.startsWith(userId + "/")) return;
+  await supabase.storage.from(BUCKET).remove([path]);
 }

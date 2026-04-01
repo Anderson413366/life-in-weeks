@@ -27,6 +27,12 @@ export function useProfile(userId: string | undefined, userEmail: string | undef
 
       if (cancelled) return;
 
+      if (error) {
+        console.error('Profile load failed:', error);
+        setLoading(false);
+        return;
+      }
+
       if (data) {
         const p = data as Profile;
         if (p.birthdate) setBirthdate(p.birthdate);
@@ -48,8 +54,9 @@ export function useProfile(userId: string | undefined, userEmail: string | undef
           avg_words_per_day: p.avg_words_per_day ?? DEFAULT_AVERAGES.avg_words_per_day,
           avg_laughs_per_day: p.avg_laughs_per_day ?? DEFAULT_AVERAGES.avg_laughs_per_day,
         });
-      } else if (!error) {
-        await supabase.from('liw_profiles' as any).insert({ id: userId, life_expectancy: DEFAULT_LIFE_EXPECTANCY } as any);
+      } else {
+        const { error: insertError } = await supabase.from('liw_profiles' as any).insert({ id: userId, life_expectancy: DEFAULT_LIFE_EXPECTANCY } as any);
+        if (insertError) console.error('Profile bootstrap insert failed:', insertError);
       }
       setLoading(false);
     }

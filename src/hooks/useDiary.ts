@@ -130,7 +130,7 @@ export function useDiary(userId: string | undefined) {
               week_index: item.weekIndex,
               content: item.content ?? '',
               photos: item.photos ?? [],
-            });
+            }, { onConflict: 'user_id,week_index' });
 
             if (error) throw error;
           }
@@ -215,7 +215,7 @@ export function useDiary(userId: string | undefined) {
         }
 
         const row = { user_id: userId, week_index: weekIndex, content: trimmed, photos: photos || [] };
-        const { error } = await (supabase.from('liw_diary_entries' as any) as any).upsert(row);
+        const { error } = await (supabase.from('liw_diary_entries' as any) as any).upsert(row, { onConflict: 'user_id,week_index' });
         
         if (error) {
           appendOfflineItem<DiarySyncOperation>(DIARY_QUEUE_KEY, {
