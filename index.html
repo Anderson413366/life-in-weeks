@@ -6,8 +6,10 @@
   <title>Life in Weeks</title>
 
   <!-- PWA -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0a0a23" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Life in Weeks" />
@@ -16,44 +18,9 @@
 
   <!-- Fonts & Tailwind -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { poppins: ['Poppins', 'sans-serif'] },
-          colors: {
-            'primary':      '#00d4ff',
-            'primary-dark':  '#0097b5',
-            'primary-glow':  'rgba(0, 212, 255, 0.3)',
-            'accent':        '#ff6b6b',
-            'accent-glow':   'rgba(255, 107, 107, 0.3)',
-            'bg-dark':       '#0c0a14',
-            'bg-light':      '#12101f',
-            'text-main':     '#ffffff',
-            'text-muted':    '#b4b4c7',
-            'box-border':    'rgba(120, 80, 200, 0.12)',
-            'card-bg':       'rgba(22, 18, 38, 0.9)',
-            'decade-marker': '#ffd700',
-            'gemini-button-bg':       '#8e44ad',
-            'gemini-button-hover-bg': '#732d91',
-          },
-          keyframes: {
-            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            'pulse-slow': { '0%, 100%': { opacity: '1' }, '50%': { opacity: '.7' } },
-          },
-          animation: {
-            'fade-in': 'fadeIn 0.5s ease-out forwards',
-            'pulse-slow': 'pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-          },
-        },
-      },
-    }
-  </script>
-  <link rel="stylesheet" href="/index.css" />
 </head>
 <body class="font-poppins bg-gradient-to-br from-bg-dark to-bg-light text-text-main flex justify-center items-start min-h-screen overflow-x-hidden antialiased">
   <div id="root" class="w-full"></div>
-  <script type="module" src="/index.tsx"></script>
+  <script type="module" src="/src/index.tsx"></script>
 </body>
 </html>
