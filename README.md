@@ -1,123 +1,186 @@
 # Life in Weeks
 
-**Your life, visualized.** A visual life dashboard that shows your entire existence as a grid of weeks — with rich statistics, mood tracking, AI-powered journaling, and deep personal insights.
+Life in Weeks is a personal reflection app that visualizes your life as a grid of weeks, layers in mood and journal history, and adds optional Gemini-powered insights.
 
-Built for neurodivergent minds (ADHD, dyslexia, depression) with a warm, calming, high-contrast design that empowers rather than overwhelms.
+The app is a React single-page application with Supabase for auth/data/storage, Vite for build/dev, and Tailwind CSS for styling. It includes offline-friendly journal and mood syncing, JSON export, public legal pages, and a PWA shell.
 
-**Live**: [life-in-weeks-seven-silk.vercel.app](https://life-in-weeks-seven-silk.vercel.app)
+Production:
 
----
+```text
+https://life-in-weeks-seven-silk.vercel.app
+```
 
-## Features
+## Core Features
 
-### Dashboard
-- Breathing SVG progress ring (pulses at your configured heart rate)
-- Daily mood check-in with 5 emotions, personalized AI responses per mood
-- Birthday countdown, exact age ticker (Y/M/D/H/M/S live)
-- 14 collapsible data sections: body stats, cosmic perspective, life in numbers, planets, and more
-- Personal horoscope (Today/Week/Year) powered by Gemini AI
-- Famous people born on your day
-- Life expectancy calculator (12-question health questionnaire)
-- iPhone-style life battery bar (green → yellow → red)
-- Shareable "Legacy Snapshot" poster
-
-### Life Grid
-- Your entire life as a grid — one cell per week, month, or year
-- Three view modes with unique colors: Weeks (cyan), Months (green), Years (purple)
-- Click any past cell to open a diary entry
-- Year labels on every row, week numbers across the top
-
-### Diary
-- Voice-to-text journaling (browser native Speech API — free)
-- Photo uploads with camera capture
-- AI reflection prompts and entry analysis
-- "On this day" historical facts
-- Quick prompts: Win, Gratitude, Lesson, Goal, Highlight
-- List/card view with search, year filter, sort
-
-### Time Mirror
-- Upload your photo → AI generates your face at every decade of life
-- Horizontal film strip with past/present/future overlays
-- AI-generated poetic life reflection
-
-### Settings
-- Profile: name, preferred name, email, phone, avatar
-- Customizable averages (heart rate, steps, sleep, etc.)
-- Focus Mode (black/white, zero animation) / Zen Mode (warm gradients)
-- Life expectancy AI estimator
-- Gemini API key with step-by-step setup guide
-- Contact us section
-
----
+- Dashboard with life statistics, exact age, milestone data, mood check-ins, and expandable insight sections
+- Life grid with one-cell-per-week visualization and diary entry access from past weeks
+- Diary with text, voice input, photo attachments, AI reflection helpers, and offline queueing
+- Time Mirror with Gemini-powered aging/reflection workflows
+- Settings for profile, averages, display mode, Gemini key, and data export
+- Public `/terms` and `/privacy` pages
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, TypeScript, Vite |
-| Styling | Tailwind CSS (CDN), Framer Motion |
-| Auth | Supabase (email/password + Google OAuth) |
-| Database | Supabase PostgreSQL with RLS |
-| Storage | Supabase Storage (photos, avatars) |
-| AI | Google Gemini 2.5 Flash (BYOK) |
-| Hosting | Vercel (auto-deploy on push) |
-| PWA | Service worker + web manifest |
+| Frontend | React 19, TypeScript, React Router |
+| Build | Vite 7 |
+| Styling | Tailwind CSS 3, PostCSS, Autoprefixer, CSS/native transitions |
+| Auth / DB / Storage | Supabase |
+| AI | Google Gemini (`@google/genai`) |
+| Testing | Vitest, Testing Library, jsdom |
+| Hosting | Vercel |
 
----
+## Project Structure
 
-## Getting Started
+```text
+src/
+  App.tsx                  app shell, routing, legal page content
+  index.tsx                React entry point
+  index.css                global styles, Tailwind entry, card system, focus mode
+  setupTests.ts            test setup (jsdom + testing-library matchers)
+  types.ts                 shared TypeScript interfaces
+  constants.ts             static app constants and quotes
+  components/
+    AuthGate.tsx            login, signup, password reset, recovery
+    DashboardPage.tsx       dashboard with stats, mood, accordions, lazy sections
+    LifeGridPage.tsx        life grid (weeks/months/years) with diary modal
+    DiaryPage.tsx           diary list, search, filter, delete
+    DiaryModal.tsx          diary entry editor (text, voice, photos, AI)
+    WeekModal.tsx           week-level diary editor from grid
+    TimeMirrorPage.tsx      Gemini-powered aging/reflection
+    SettingsPage.tsx        profile, preferences, export, sign out
+    LegalPage.tsx           public terms/privacy renderer
+    Navigation.tsx          top nav tabs with greeting/avatar
+    FluidBackground.tsx     animated canvas particles (reduced-motion aware)
+    WeeksGrid.tsx           memoized 4000+ cell life grid
+    AccordionSection.tsx    expandable section with measured height
+    FeedbackPopup.tsx       timed in-app feedback (stars + freeform)
+    dashboard/              lazy-loaded dashboard subsections
+    ...                     shared UI: Tooltip, LifeBattery, ExactAgeTicker, etc.
+  hooks/
+    useAuth.ts              Supabase auth, recovery, sign-out (clears API key)
+    useProfile.ts           profile CRUD with error handling and rollback
+    useDiary.ts             diary CRUD, optimistic updates, offline queue
+    useMood.ts              mood CRUD, optimistic updates, offline queue
+    useLifeStats.ts         life calculations and 1-second dynamic counter
+    useAppMode.ts           normal/focus mode toggle
+    useTimeMirror.ts        Time Mirror AI flow
+    useHoroscope.ts         Gemini horoscope helper
+    useFamousBirthdays.ts   birthday insights helper
+    useSpeechToText.ts      browser speech-to-text
+  lib/
+    supabase.ts             Supabase client (env-based)
+    ai.ts                   Gemini helpers and BYOK key access
+    offlineSync.ts          localStorage queue with race-safe flush
+    storage.ts              photo/avatar upload/delete with ownership check
+    exportData.ts           JSON export (excludes phone/avatarUrl)
+    lifeData.ts             biology, cosmic, and number calculations
+    generations.ts          generational identity lookup
+    zodiac.ts               zodiac sign lookup
+    onThisDay.ts            historical facts
+    theme.ts                app mode helpers
+public/
+  favicon.ico
+  manifest.json
+  sw.js                    service worker (network-first, stale-while-revalidate)
+```
 
-### Prerequisites
-- Node.js 18+
-- npm
+Key config files:
 
-### Local Development
+- `vercel.json` SPA rewrite rules for direct route loads in production
+- `tailwind.config.js` Tailwind theme with custom colors and animations
+- `postcss.config.js` PostCSS with Tailwind and Autoprefixer
+- `vite.config.ts` Vite config with React plugin and Rollup WASM alias
+
+## Routes
+
+- `/` dashboard
+- `/grid` life grid
+- `/diary` journal
+- `/timemirror` Time Mirror
+- `/settings` profile, preferences, export
+- `/terms` public terms page
+- `/privacy` public privacy page
+
+Unauthenticated users are routed through `AuthGate`. Password recovery is handled in-app.
+
+## Environment
+
+Create a local `.env` file from `.env.example`:
 
 ```bash
-git clone https://github.com/Anderson413366/life-in-weeks.git
-cd life-in-weeks
+cp .env.example .env
+```
+
+Required variables:
+
+```bash
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
+
+Gemini is BYOK. Users add their Gemini API key inside Settings and it is stored in their profile.
+
+## Local Development
+
+```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173)
+Default local URL:
 
-### Deploy
+```text
+http://localhost:5173
+```
+
+## Verification
+
+Run the full local verification loop before shipping:
 
 ```bash
+npm run typecheck
+npm run test -- run
+npm run build
+```
+
+## Deployment
+
+The project is linked to Vercel via `.vercel/project.json`.
+
+Important:
+
+- `vercel.json` contains the SPA rewrite rule required for direct route loads like `/diary`, `/grid`, `/settings`, and `/timemirror`
+
+Production deploy:
+
+```bash
+vercel deploy --prod
+```
+
+Recommended release flow:
+
+```bash
+npm run typecheck
+npm run test -- run
 npm run build
 vercel deploy --prod
 ```
 
-## Auth Recovery
+## Notes
 
-Life in Weeks now supports password reset end-to-end inside the SPA:
-
-- Request reset from the auth gate "Forgot your password?" action
-- Supabase returns to `https://life-in-weeks-seven-silk.vercel.app/?reset=1`
-- The app exchanges the auth code, enters recovery mode, and prompts for a new password in-place
-
-Because this app shares a Supabase project with GleamOps and AnchorLife, reset emails from Life in Weeks must continue to pass `redirectTo` explicitly.
-
----
-
-## Environment
-
-No `.env` file needed. The Supabase URL and anon key are configured in `lib/supabase.ts`. Users provide their own Gemini API key via Settings (stored in their Supabase profile).
-
----
-
-## Design Philosophy
-
-- **Warm dark theme** with subtle purple undertones (not cold blue)
-- **High contrast** for ADHD/neurodivergent accessibility
-- **Progressive disclosure** — only hero ring + mood check visible on load
-- **Cards use `.card-base`** — warm gradient backgrounds with purple-tinted borders
-- **Every interactive element at 100% opacity** — never dimmed by default
-- **Focus Mode** for sensory sensitivity — pure black, zero animations
-- **WCAG 2.2 AA compliant** — reduced motion, focus-visible, 44px touch targets
-
----
+- Supabase lives in a shared project and app tables are prefixed with `liw_`
+- Legal pages are public and do not require authentication
+- Journal and mood writes use an offline queue with race-safe flush to support temporary connectivity loss
+- Export supports JSON life-data export from Settings (excludes phone number and avatar URL for privacy)
+- The build toolchain intentionally avoids direct macOS-only native package declarations
+- Runtime animation uses CSS/native transitions and a canvas particle background (respects `prefers-reduced-motion`)
+- `framer-motion`, `@react-spring/web`, and `@use-gesture/react` are not used
+- The Gemini API key is cleared from localStorage on sign-out
+- Profile saves include error handling with rollback on critical fields
+- The life grid pre-computes date labels and uses `React.memo` for 4000+ cells
+- The service worker uses network-first for navigation and stale-while-revalidate for assets
 
 ## License
 
