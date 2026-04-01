@@ -1,5 +1,9 @@
-const CACHE_NAME = "liw-v3";
-const PRECACHE_URLS = ["/", "/index.html"];
+const CACHE_NAME = "liw-v5";
+const PRECACHE_URLS = [
+  "/",
+  "/index.html",
+  "/manifest.json",
+];
 
 // Install: cache shell
 self.addEventListener("install", (e) => {
@@ -19,7 +23,7 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for API calls, cache-first for static assets
+// Fetch: network-first for navigation, stale-while-revalidate for local assets.
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
 
@@ -29,21 +33,31 @@ self.addEventListener("fetch", (e) => {
   // For navigation requests, try network first
   if (e.request.mode === "navigate") {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match("/index.html"))
+      fetch(e.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put("/index.html", clone));
+          return response;
+        })
+        .catch(() => caches.match("/index.html"))
     );
     return;
   }
 
-  // For static assets, cache-first
+  // For same-origin assets, serve cached quickly and refresh in the background.
   e.respondWith(
-    caches.match(e.request).then((cached) =>
-      cached || fetch(e.request).then((response) => {
-        if (response.ok && url.origin === self.location.origin) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
-        }
-        return response;
-      })
-    )
+    caches.match(e.request).then((cached) => {
+      const networkFetch = fetch(e.request)
+        .then((response) => {
+          if (response.ok && url.origin === self.location.origin) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+          }
+          return response;
+        })
+        .catch(() => cached);
+
+      return cached || networkFetch;
+    }),
   );
 });
