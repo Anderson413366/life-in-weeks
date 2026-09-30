@@ -1,5 +1,7 @@
 # Life in Weeks
 
+> 🧭 **Read `~/AI-Rules/RULES.md` first.** It holds Anderson's global rules for every AI (safety, approvals, formatting, memory). This file only adds what is specific to this project.
+
 React 19 + TypeScript + Vite + Supabase personal reflection app centered on a life-in-weeks visualization. Preserve its emotional tone (reflective, calm, low-friction), privacy model, and product identity. See [README.md](README.md) for product overview, routes, and deployment. Global rules live in `~/AI-Rules/RULES.md`. Code plus the newest docs beat stale notes; if docs conflict, verify in code and fix the stale doc.
 
 ## Product facts
