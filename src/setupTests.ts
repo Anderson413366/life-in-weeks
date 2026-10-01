@@ -1,11 +1,14 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key');
+
 const localStorageMock = (function() {
   let store: Record<string, string> = {};
   return {
     getItem: function(key: string) {
-      return store[key] || null;
+      return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null;
     },
     setItem: function(key: string, value: string) {
       store[key] = value.toString();

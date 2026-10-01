@@ -11,8 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
-.claude/
-package-lock.json
+coverage
+output
+playwright-report
+test-results
+supabase/.branches
+supabase/.temp
 
 # Editor directories and files
 .vscode/*
@@ -26,3 +30,7 @@ package-lock.json
 *.sw?
 .vercel
 .env
+.env.local
+.env.production
+.env.development
+!.env.example

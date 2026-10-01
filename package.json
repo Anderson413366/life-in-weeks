@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:e2e": "npm exec --yes --package=playwright -- node scripts/verify-e2e.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.4.0",

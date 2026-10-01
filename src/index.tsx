@@ -15,9 +15,17 @@ ReactDOM.createRoot(root).render(
   </React.StrictMode>,
 );
 
-// Register service worker for PWA
-if ("serviceWorker" in navigator) {
+// Register the PWA worker only in production so local QA does not use stale caches.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
   });
+} else if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      if (registration.active?.scriptURL.endsWith("/sw.js")) {
+        void registration.unregister();
+      }
+    });
+  }).catch(() => {});
 }

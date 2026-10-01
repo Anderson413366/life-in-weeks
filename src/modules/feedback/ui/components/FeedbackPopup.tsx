@@ -1,0 +1,147 @@
+import React, { useState, useEffect } from "react";
+import { dismissFeedbackPrompt, shouldShowFeedbackPrompt, submitFeedback } from "../../service/feedback.service";
+
+interface FeedbackPopupProps {
+  userId?: string;
+}
+
+const FeedbackPopup: React.FC<FeedbackPopupProps> = ({ userId }) => {
+  const [show, setShow] = useState(false);
+  const [stars, setStars] = useState(0);
+  const [message, setMessage] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [showFollowUp, setShowFollowUp] = useState(false);
+
+  useEffect(() => {
+    if (!shouldShowFeedbackPrompt()) return;
+    // Show after 60 seconds of usage
+    const timer = setTimeout(() => setShow(true), 60000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!show) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dismiss();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [show]);
+
+  function dismiss() {
+    dismissFeedbackPrompt();
+    setShow(false);
+  }
+
+  async function handleStarClick(rating: number) {
+    setStars(rating);
+    if (rating === 5) {
+      // 5 stars — save immediately, no follow-up
+      await saveFeedback(rating, "");
+      setSubmitted(true);
+      setTimeout(dismiss, 2000);
+    } else {
+      // Less than 5 — show follow-up question
+      setShowFollowUp(true);
+    }
+  }
+
+  async function handleSubmitFollowUp() {
+    await saveFeedback(stars, message);
+    setSubmitted(true);
+    setTimeout(dismiss, 2000);
+  }
+
+  async function saveFeedback(rating: number, msg: string) {
+    try {
+      const { error } = await submitFeedback(userId, rating, msg);
+      if (error) return;
+    } catch {
+      return;
+    }
+  }
+
+  return (
+    <>
+      {show && (
+        <div
+          className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          style={{ animation: "fadeIn 0.2s ease-out forwards" }}
+          onClick={(e) => { if (e.target === e.currentTarget) dismiss(); }}
+        >
+          <div className="card-base relative p-6 sm:p-8 w-full max-w-md animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="feedback-dialog-title">
+            {submitted ? (
+              <div className="text-center py-4">
+                <div className="text-4xl mb-3">💜</div>
+                <p id="feedback-dialog-title" className="text-white font-bold text-lg">Thank you!</p>
+                <p className="text-white/50 text-sm mt-1">Your feedback means everything to us.</p>
+              </div>
+            ) : (
+              <>
+                <button onClick={dismiss} aria-label="Close feedback prompt" className="absolute top-4 right-4 text-white/30 hover:text-white text-sm">✕</button>
+
+                <div className="text-center mb-5">
+                  <p id="feedback-dialog-title" className="text-white/90 text-sm leading-relaxed">
+                    I know, I know... pop-ups are a pain in the ass. 😅
+                  </p>
+                  <p className="text-white/60 text-sm mt-2 leading-relaxed">
+                    But it would <strong className="text-[#00d4ff]">genuinely</strong> help me as the developer if you shared your honest take. Don't hold back.
+                  </p>
+                </div>
+
+                {/* Stars */}
+                <div className="flex justify-center gap-2 mb-4">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => handleStarClick(n)}
+                      aria-label={`Rate ${n} out of 5`}
+                      className="text-3xl transition-all duration-200 hover:scale-125"
+                      style={{ filter: n <= stars ? "none" : "grayscale(1) opacity(0.3)" }}
+                    >
+                      ⭐
+                    </button>
+                  ))}
+                </div>
+
+                {stars > 0 && stars < 5 && <p className="text-center text-white/40 text-xs mb-3">{stars} out of 5</p>}
+
+                {/* Follow-up for < 5 stars */}
+                {showFollowUp && (
+                    <div className="overflow-hidden animate-fade-in">
+                      <p className="text-white/70 text-sm text-center mb-3">
+                        Okay, honest reviews like yours matter the most. 🙏<br />
+                        <strong className="text-[#00d4ff]">What would it take to get to 5 stars?</strong>
+                      </p>
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Be brutally honest — bugs, missing features, ugly design, whatever..."
+                        className="w-full h-24 p-3 rounded-xl border border-[rgba(120,80,200,0.15)] bg-transparent text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#00d4ff]/30 mb-3"
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleSubmitFollowUp}
+                        className="w-full h-10 rounded-xl text-sm font-semibold text-white transition-all"
+                        style={{ background: "linear-gradient(135deg, #00d4ff, #ec4899)" }}
+                      >
+                        Send Feedback
+                      </button>
+                    </div>
+                  )}
+
+                <p className="text-center text-white/15 text-[0.55rem] mt-4">
+                  This won't show again for 3 days. Promise.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default FeedbackPopup;

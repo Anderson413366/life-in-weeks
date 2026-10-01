@@ -2,95 +2,41 @@ import React, { Suspense, lazy, useState } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 
 import { QUOTES } from "./constants";
-import { useAuth } from "./hooks/useAuth";
-import { useProfile } from "./hooks/useProfile";
-import { useDiary } from "./hooks/useDiary";
-import { useLifeStats } from "./hooks/useLifeStats";
-import { useMood } from "./hooks/useMood";
-import { useAppMode } from "./hooks/useAppMode";
+import { getApiKey } from "@/modules/ai/service/ai.service";
+import { useAuth } from "@/modules/auth/ui/hooks/useAuth";
+import { useDiary } from "@/modules/diary/ui/hooks/useDiary";
+import FeedbackPopup from "@/modules/feedback/ui/components/FeedbackPopup";
+import LegalPage from "@/modules/legal/ui/pages/LegalPage";
+import { getPublicLegalPage } from "@/modules/legal/service/legal.service";
+import { useLifeStats } from "@/modules/life/ui/hooks/useLifeStats";
+import { useMood } from "@/modules/mood/ui/hooks/useMood";
+import { useAppMode } from "@/modules/preferences/ui/hooks/useAppMode";
+import { useProfile } from "@/modules/profile/ui/hooks/useProfile";
+import { Button, InfoCard, Surface } from "@/shared/ui/components";
+import { FluidBackground, Footer, Navigation, type Page } from "@/shared/ui/shell";
 
-import Navigation, { type Page } from "./components/Navigation";
-import { getApiKey } from "./lib/ai";
-import FluidBackground from "./components/FluidBackground";
-import Footer from "./components/Footer";
-import LegalPage from "./components/LegalPage";
+const AuthGate = lazy(() => import("@/modules/auth/ui/components/AuthGate"));
+const DashboardPage = lazy(() => import("@/modules/life/ui/pages/DashboardPage"));
+const LifeGridPage = lazy(() => import("@/modules/life/ui/pages/LifeGridPage"));
+const DiaryPage = lazy(() => import("@/modules/diary/ui/pages/DiaryPage"));
+const SettingsPage = lazy(() => import("@/modules/profile/ui/pages/SettingsPage"));
+const TimeMirrorPage = lazy(() => import("@/modules/ai/ui/pages/TimeMirrorPage"));
+const VoiceJournalButton = lazy(() => import("@/modules/diary/ui/components/VoiceJournalButton"));
 
-const AuthGate = lazy(() => import("./components/AuthGate"));
-const DashboardPage = lazy(() => import("./components/DashboardPage"));
-const LifeGridPage = lazy(() => import("./components/LifeGridPage"));
-const DiaryPage = lazy(() => import("./components/DiaryPage"));
-const SettingsPage = lazy(() => import("./components/SettingsPage"));
-const TimeMirrorPage = lazy(() => import("./components/TimeMirrorPage"));
-const FeedbackPopup = lazy(() => import("./components/FeedbackPopup"));
-const VoiceJournalButton = lazy(() => import("./components/VoiceJournalButton"));
-
-const termsSections = [
-  {
-    heading: "Using the service",
-    body: [
-      "Life in Weeks is a personal reflection and journaling application built to help you visualize time, track moods, and preserve your own notes.",
-      "You agree to use the app lawfully and not to upload content that is abusive, fraudulent, or infringes on someone else's rights.",
-    ],
-  },
-  {
-    heading: "Your account and content",
-    body: [
-      "You are responsible for maintaining the security of your account and login credentials.",
-      "You retain ownership of the diary entries, uploaded photos, profile information, and exports you create inside the app.",
-    ],
-  },
-  {
-    heading: "AI-assisted features",
-    body: [
-      "Some features rely on your own Gemini API key. AI-generated output is intended for reflection and convenience, not for medical, legal, or financial advice.",
-      "You should review generated content before relying on it or sharing it elsewhere.",
-    ],
-  },
-  {
-    heading: "Availability and changes",
-    body: [
-      "We may improve, modify, or discontinue parts of the service over time. We aim for reliability, but uninterrupted availability is not guaranteed.",
-      "If your data is important to you, export it regularly using the in-app export tools.",
-    ],
-  },
-];
-
-const privacySections = [
-  {
-    heading: "What data is stored",
-    body: [
-      "Life in Weeks stores the information needed to operate your account and features, including profile fields, mood entries, diary entries, uploaded photos, and app preferences.",
-      "If you add a Gemini API key, it is stored with your profile so your AI features can work across devices.",
-    ],
-  },
-  {
-    heading: "How the data is used",
-    body: [
-      "Your data is used to render your dashboard, life grid, diary history, mood history, and optional AI-assisted experiences.",
-      "We do not sell your personal journal content or mood history.",
-    ],
-  },
-  {
-    heading: "Infrastructure and storage",
-    body: [
-      "Account data is stored in Supabase and protected by per-user access rules. Some non-sensitive preferences may also be cached locally in your browser.",
-      "Uploaded images and avatars are stored in the app's configured storage bucket.",
-    ],
-  },
-  {
-    heading: "Your controls",
-    body: [
-      "You can update profile data, export your life data as JSON, and replace or delete content you have saved.",
-      "For account-specific support, contact support@lifeinweeks.app.",
-    ],
-  },
-];
+const getPageFromPath = (path: string): Page => {
+  if (path.includes("grid")) return "grid";
+  if (path.includes("diary")) return "diary";
+  if (path.includes("timemirror")) return "timemirror";
+  if (path.includes("settings")) return "settings";
+  return "dashboard";
+};
 
 const App: React.FC = () => {
   const {
     user,
     loading: authLoading,
     recoveryMode,
+    error: authError,
     signIn,
     signUp,
     signInWithGoogle,
@@ -100,26 +46,18 @@ const App: React.FC = () => {
     signOut,
   } = useAuth();
   const profile = useProfile(user?.id, user?.email);
-  const { entries: diaryEntries, fullEntries, saveEntry } = useDiary(user?.id);
-  const { lifeStats, dynamicStats } = useLifeStats(profile.birthdate, profile.lifeExpectancy);
-  const { todayMood, recentMoods, saveMood } = useMood(user?.id);
-  const { mode, setMode } = useAppMode();
-  
   const navigate = useNavigate();
   const location = useLocation();
+  const page = getPageFromPath(location.pathname);
+
+  const { entries: diaryEntries, fullEntries, saveEntry } = useDiary(user?.id);
+  const { lifeStats, dynamicStats } = useLifeStats(profile.birthdate, profile.lifeExpectancy, page === "dashboard");
+  const { todayMood, recentMoods, saveMood } = useMood(user?.id);
+  const { mode, setMode } = useAppMode();
 
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-
-  // Determine current page from location
-  const getPageFromPath = (path: string): Page => {
-    if (path.includes("grid")) return "grid";
-    if (path.includes("diary")) return "diary";
-    if (path.includes("timemirror")) return "timemirror";
-    if (path.includes("settings")) return "settings";
-    return "dashboard";
-  };
-
-  const page = getPageFromPath(location.pathname);
+  const termsPage = getPublicLegalPage("terms");
+  const privacyPage = getPublicLegalPage("privacy");
   
   const handleNavigate = (p: Page) => {
     if (p === "dashboard") navigate("/");
@@ -134,20 +72,20 @@ const App: React.FC = () => {
     </div>
   );
 
+  if (location.pathname === "/terms") {
+    return <LegalPage {...termsPage} />;
+  }
+
+  if (location.pathname === "/privacy") {
+    return <LegalPage {...privacyPage} />;
+  }
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className={`text-lg animate-pulse ${mode === "focus" ? "text-white" : "text-primary glow-cyan"}`}>Loading...</div>
       </div>
     );
-  }
-
-  if (location.pathname === "/terms") {
-    return <LegalPage title="Terms of Service" updatedAt="March 22, 2026" sections={termsSections} />;
-  }
-
-  if (location.pathname === "/privacy") {
-    return <LegalPage title="Privacy Policy" updatedAt="March 22, 2026" sections={privacySections} />;
   }
 
   if (!user || recoveryMode) {
@@ -161,6 +99,7 @@ const App: React.FC = () => {
           onUpdatePassword={updatePassword}
           onExitRecoveryMode={exitRecoveryMode}
           recoveryMode={recoveryMode}
+          authMessage={authError ?? undefined}
         />
       </Suspense>
     );
@@ -178,25 +117,57 @@ const App: React.FC = () => {
 
   // Empty state component
   const EmptyState = () => (
-    <div key="empty" className="flex flex-col items-center justify-center py-20 gap-4">
-      <div className="text-6xl opacity-20">◉</div>
-      <p className={`text-lg ${mode === "focus" ? "text-[#888]" : "text-text-muted"}`}>
-        {profile.greeting ? `Welcome, ${profile.greeting}! ` : ""}Set your birthdate in Settings to begin.
-      </p>
-      <button
-        onClick={() => handleNavigate("settings")}
-        className="mt-2 px-5 py-2 rounded-lg bg-primary/20 text-primary border border-primary/30 text-sm font-medium hover:bg-primary/30 transition-colors"
-      >
-        Go to Settings
-      </button>
+    <div key="empty" className="mx-auto flex w-full max-w-4xl flex-col gap-6 py-12">
+      <Surface variant="hero">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-2xl space-y-3">
+            <p className="eyebrow">Get Started</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Set up your timeline before you explore.
+            </h1>
+            <p className={`text-sm leading-7 ${mode === "focus" ? "text-white/72" : "text-text-muted"}`}>
+              {profile.greeting ? `${profile.greeting}, ` : ""}
+              Life in Weeks needs a few identity details before it can calculate your grid, milestones, and current week with the right emotional context.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => handleNavigate("settings")} variant="primary">
+              Finish setup in Settings
+            </Button>
+            <Button onClick={() => handleNavigate("dashboard")}>
+              Return home
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          {[
+            {
+              title: "1. Add your identity details",
+              description: "Birthdate, preferred name, and life expectancy shape the dashboard and life grid.",
+            },
+            {
+              title: "2. Choose your default experience",
+              description: "Pick Zen or Focus mode so the app feels calm enough to use daily.",
+            },
+            {
+              title: "3. Unlock optional tools",
+              description: "Add a Gemini key only if you want AI reflections and Time Mirror generation.",
+            },
+          ].map((item) => (
+            <InfoCard key={item.title} title={item.title} description={item.description} />
+          ))}
+        </div>
+      </Surface>
     </div>
   );
 
   return (
-    <div className={`flex flex-col items-center w-full min-h-screen p-4 sm:p-5 md:p-6 ${mode === "focus" ? "bg-black" : ""}`}>
+    <div className={`app-shell ${mode === "focus" ? "bg-black" : ""}`}>
       <FluidBackground mode={mode} todayMood={todayMood} />
-      <div className="w-full max-w-7xl flex flex-col gap-4 sm:gap-6 text-center">
-        <Navigation currentPage={page} onNavigate={handleNavigate} greeting={profile.greeting} avatarUrl={profile.avatarUrl} />
+      <div className="shell-frame">
+        <Navigation currentPage={page} onNavigate={handleNavigate} greeting={profile.greeting} avatarUrl={profile.avatarUrl} mode={mode} />
 
         <Suspense fallback={routeFallback}>
           <Routes location={location}>
@@ -212,14 +183,10 @@ const App: React.FC = () => {
                 averages={profile.averages}
                 mode={mode}
                 onModeChange={setMode}
-                onBirthdateChange={profile.updateBirthdate}
-                onLifeExpectancyChange={profile.updateLifeExpectancy}
-                onDisplayNameChange={profile.updateDisplayName}
-                onPreferredNameChange={profile.updatePreferredName}
-                onPhoneChange={profile.updatePhone}
+                onProfileSave={profile.saveProfileDetails}
+                onAveragesSave={profile.saveAverages}
                 onAvatarChange={profile.updateAvatar}
                 onApiKeyChange={profile.updateApiKey}
-                onAveragesChange={profile.updateAverages}
                 onSignOut={signOut}
                 diaryEntries={fullEntries}
                 moods={recentMoods}
@@ -227,23 +194,30 @@ const App: React.FC = () => {
             } />
             
             <Route path="/timemirror" element={
-              <TimeMirrorPage
-                birthYear={profile.birthdate ? parseInt(profile.birthdate.split("-")[0], 10) : 1984}
-                currentAge={lifeStats ? Math.floor(lifeStats.daysPassed / 365.25) : 30}
-                lifeExpectancy={profile.lifeExpectancy}
-                displayName={profile.greeting || profile.displayName}
-                geminiApiKey={getApiKey()}
-              />
+              hasBirthdate ? (
+                <TimeMirrorPage
+                  birthYear={parseInt(profile.birthdate.split("-")[0], 10)}
+                  currentAge={lifeStats ? Math.floor(lifeStats.daysPassed / 365.25) : 30}
+                  lifeExpectancy={profile.lifeExpectancy}
+                  displayName={profile.greeting || profile.displayName}
+                  geminiApiKey={getApiKey()}
+                  mode={mode}
+                  onOpenSettings={() => handleNavigate("settings")}
+                />
+              ) : <EmptyState />
             } />
 
             <Route path="/diary" element={
-              <DiaryPage
-                fullEntries={fullEntries}
-                diaryEntries={diaryEntries}
-                birthdate={profile.birthdate}
-                userId={user?.id}
-                onSave={saveEntry}
-              />
+              hasBirthdate ? (
+                <DiaryPage
+                  fullEntries={fullEntries}
+                  diaryEntries={diaryEntries}
+                  birthdate={profile.birthdate}
+                  userId={user?.id}
+                  mode={mode}
+                  onSave={saveEntry}
+                />
+              ) : <EmptyState />
             } />
 
             <Route path="/grid" element={
@@ -271,15 +245,18 @@ const App: React.FC = () => {
                   quote={quote}
                   birthYear={parseInt(profile.birthdate.split("-")[0], 10)}
                   birthMonth={parseInt(profile.birthdate.split("-")[1], 10)}
-                  birthDay={parseInt(profile.birthdate.split("-")[2], 10)}
-                  averages={profile.averages}
-                  todayMood={todayMood}
-                  recentMoods={recentMoods}
-                  mode={mode}
-                  displayName={profile.greeting || profile.displayName}
-                  onSaveMood={saveMood}
-                />
-              ) : <EmptyState />
+                birthDay={parseInt(profile.birthdate.split("-")[2], 10)}
+                averages={profile.averages}
+                todayMood={todayMood}
+                recentMoods={recentMoods}
+                diaryEntryCount={fullEntries.length}
+                hasApiKey={!!getApiKey().trim()}
+                mode={mode}
+                displayName={profile.greeting || profile.displayName}
+                onSaveMood={saveMood}
+                onNavigate={handleNavigate}
+              />
+            ) : <EmptyState />
             } />
             
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -290,7 +267,7 @@ const App: React.FC = () => {
       {/* Floating voice journal — visible on dashboard and grid */}
       {hasBirthdate && (page === "dashboard" || page === "grid") && (
         <Suspense fallback={null}>
-          <VoiceJournalButton birthdate={profile.birthdate} onSave={saveEntry} />
+          <VoiceJournalButton birthdate={profile.birthdate} onSave={saveEntry} mode={mode} />
         </Suspense>
       )}
 

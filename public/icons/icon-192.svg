@@ -5,9 +5,8 @@
   <circle cx="96" cy="96" r="61.44" fill="none" stroke="url(#g)" stroke-width="7.68"
     stroke-linecap="round" stroke-dasharray="386.03890527311376" stroke-dashoffset="135.1136168455898"
     transform="rotate(-90 96 96)"/>
-  <!-- Text -->
-  <text x="96" y="108.096" text-anchor="middle" fill="white"
-    font-family="system-ui,-apple-system,sans-serif" font-weight="700" font-size="34.56">LiW</text>
+  <!-- Week-grid mark -->
+  <rect x="71.03999999999999" y="71.03999999999999" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="#ffffff"/><rect x="89.28" y="71.03999999999999" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="#ffffff"/><rect x="107.52" y="71.03999999999999" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="#ffffff"/><rect x="71.03999999999999" y="89.28" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="#ffffff"/><rect x="89.28" y="89.28" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="#ffffff"/><rect x="107.52" y="89.28" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="rgba(255,255,255,0.18)"/><rect x="71.03999999999999" y="107.52" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="rgba(255,255,255,0.18)"/><rect x="89.28" y="107.52" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="rgba(255,255,255,0.18)"/><rect x="107.52" y="107.52" width="13.440000000000001" height="13.440000000000001" rx="2.9568000000000003" fill="rgba(255,255,255,0.18)"/>
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#00d4ff"/>

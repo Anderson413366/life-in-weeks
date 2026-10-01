@@ -28,10 +28,6 @@ export default defineConfig({
             return "supabase-vendor";
           }
 
-          if (id.includes("framer-motion") || id.includes("@react-spring") || id.includes("@use-gesture")) {
-            return "motion-vendor";
-          }
-
           if (id.includes("date-fns")) {
             return "date-vendor";
           }
